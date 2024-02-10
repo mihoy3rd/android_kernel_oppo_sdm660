@@ -9,6 +9,7 @@
  led_flash0: qcom,camera-flash@0 {
   cell-index = <0>;
   compatible = "qcom,camera-flash";
+  qcom,flash-name = "pmic";
   qcom,flash-source = <&pm660l_flash0>;
   qcom,torch-source = <&pm660l_torch0>;
   qcom,switch-source = <&pm660l_switch0>;
@@ -64,6 +65,7 @@
   reg = <0>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "imx398_cat24c64";
+  position = <0x00>;
   qcom,slave-addr = <0xa0>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;
@@ -101,6 +103,7 @@
   reg = <1>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "m24c64s_16051";
+  position = <0x01>;
   qcom,slave-addr = <0xa2>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;
@@ -137,6 +140,7 @@
   reg = <0x2>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "imx350_cat24c64";
+  position = <0x02>;
   qcom,slave-addr = <0xa8>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;
@@ -176,6 +180,7 @@
   reg = <0x3>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "imx350_gt24c64s";
+  position = <0x02>;
   qcom,slave-addr = <0xa2>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;
@@ -215,6 +220,7 @@
   reg = <3>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "s5k2p7sq_cat24c64";
+  position = <0x00>;
   qcom,slave-addr = <0xa0>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;
@@ -252,6 +258,7 @@
   reg = <0x5>;
   compatible = "qcom,eeprom";
   qcom,eeprom-name = "s5k2t7sx_cat24c64";
+  position = <0x02>;
   qcom,slave-addr = <0xa2>;
   qcom,num-blocks = <1>;
   qcom,i2c-freq-mode =<1>;

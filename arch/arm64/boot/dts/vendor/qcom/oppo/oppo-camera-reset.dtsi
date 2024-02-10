@@ -21,6 +21,47 @@
 /delete-node/ &eeprom1;
 /delete-node/ &eeprom2;
 
+/*
+ * The stock OPPO projects use the higher CSI clock votes required by their
+ * 20 MP camera paths.
+ */
+&soc {
+	qcom,csiphy@c824000 {
+		qcom,clock-rates = <0 0 0 0 0 0 384000000 0 0 269333333 0
+			0 384000000 0 0>;
+	};
+
+	qcom,csiphy@c825000 {
+		qcom,clock-rates = <0 0 0 0 0 0 384000000 0 0 269333333 0
+			0 384000000 0 0>;
+	};
+
+	qcom,csiphy@c826000 {
+		qcom,clock-rates = <0 0 0 0 0 0 384000000 0 0 269333333 0
+			0 384000000 0 0>;
+	};
+
+	qcom,csid@ca30000 {
+		qcom,clock-rates = <0 0 0 0 0 0 0 384000000 384000000
+			0 0 0 0 0>;
+	};
+
+	qcom,csid@ca30400 {
+		qcom,clock-rates = <0 0 0 0 0 0 0 256000000 256000000
+			0 0 0 0 0>;
+	};
+
+	qcom,csid@ca30800 {
+		qcom,clock-rates = <0 0 0 0 0 0 0 256000000 256000000
+			0 0 0 0 0>;
+	};
+
+	qcom,csid@ca30c00 {
+		qcom,clock-rates = <0 0 0 0 0 0 0 256000000 256000000
+			0 0 0 0 0>;
+	};
+};
+
 &cci {
 	status = "okay";
 
