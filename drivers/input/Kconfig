@@ -231,3 +231,7 @@ endmenu
 
 endmenu
 
+config OPPO_TARGET_DEVICE
+	string "OPPO target device"
+	---help---
+	  e.g. MSM_00000
