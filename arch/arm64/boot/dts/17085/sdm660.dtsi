@@ -300,21 +300,7 @@
 	firmware: firmware {
 		android {
 			compatible = "android,firmware";
-			fstab {
-				compatible = "android,fstab";
-				vendor {
-					compatible = "android,vendor";
-					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/vendor";
-					type = "ext4";
-					mnt_flags = "ro,barrier=1,discard";
-//#ifndef VENDOR_EDIT //Fanhong.Kong@PSW.BSP.CHG,add 2017/10/25 for close AB
-//					fsmgr_flags = "wait,slotselect,verify";
-//#else/*VENDOR_EDIT*/
-					fsmgr_flags = "wait,verify";
-//#endif/*VENDOR_EDIT*/
-					status = "ok";
-				};
-			};
+			boot_devices = "soc/c0c4000.sdhci";
 		};
 	};
 
