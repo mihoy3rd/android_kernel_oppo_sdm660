@@ -25,6 +25,10 @@ SUBSYS(cpuacct)
 SUBSYS(schedtune)
 #endif
 
+#if IS_ENABLED(CONFIG_SCHED_TUNE_DUMMY)
+SUBSYS(schedtune)
+#endif
+
 #if IS_ENABLED(CONFIG_BLK_CGROUP)
 SUBSYS(io)
 #endif

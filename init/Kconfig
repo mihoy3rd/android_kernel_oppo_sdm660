@@ -1279,6 +1279,14 @@ config SCHED_TUNE
 
 	  If unsure, say N.
 
+config SCHED_TUNE_DUMMY
+	bool "Dummy SCHEDTUNE nodes"
+	depends on SMP
+	depends on !CGROUP_SCHEDTUNE
+	default y
+	help
+	  Create dummy SCHEDTUNE nodes to satisfy rom compability.
+
 config SYSFS_DEPRECATED
 	bool "Enable deprecated sysfs features to support old userspace tools"
 	depends on SYSFS
