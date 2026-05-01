@@ -44,34 +44,41 @@
 
 #define subsys_to_drv(d) container_of(d, struct modem_data, subsys_desc)
 
-static void log_modem_sfr(void)
+static int log_modem_sfr(void)
 {
 	u32 size;
+	int rc = -1;
 	char *smem_reason, reason[MAX_SSR_REASON_LEN];
 
 	smem_reason = smem_get_entry_no_rlock(SMEM_SSR_REASON_MSS0, &size, 0,
 							SMEM_ANY_HOST_FLAG);
 	if (!smem_reason || !size) {
 		pr_err("modem subsystem failure reason: (unknown, smem_get_entry_no_rlock failed).\n");
-		return;
+		return rc;
 	}
 	if (!smem_reason[0]) {
 		pr_err("modem subsystem failure reason: (unknown, empty string found).\n");
-		return;
+		return rc;
 	}
 
 	strlcpy(reason, smem_reason, min(size, MAX_SSR_REASON_LEN));
 	pr_err("modem subsystem failure reason: %s.\n", reason);
 
+	if(strstr(reason, "OPPO_MODEM_NO_RAMDUMP_EXPECTED")){
+		pr_err("%s will subsys reset",__func__);
+		rc = 1; //set RELATED reset
+	}
+
 	smem_reason[0] = '\0';
 	wmb();
+	return rc;
 }
 
 static void restart_modem(struct modem_data *drv)
 {
-	log_modem_sfr();
+	int restart_level = log_modem_sfr();
 	drv->ignore_errors = true;
-	subsystem_restart_dev(drv->subsys);
+	subsystem_restart_dev_level(drv->subsys,restart_level);
 }
 
 static irqreturn_t modem_err_fatal_intr_handler(int irq, void *dev_id)
