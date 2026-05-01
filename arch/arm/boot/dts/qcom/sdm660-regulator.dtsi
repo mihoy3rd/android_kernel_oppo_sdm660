@@ -949,4 +949,26 @@
 			};
 		};
 	};
+
+	//#ifdef VENDOR_EDIT
+	//rendong.shi@Bsp.Storage.card Added for vdd_en using gpio supply 3V
+	sdhc2_vdd_vreg: sdhc2_vdd_vreg {
+		compatible = "regulator-fixed";
+		regulator-name = "sdhc2_vdd_vreg";
+		startup-delay-us = <0>;
+		enable-active-high;
+		gpio = <&tlmm 52 0>;
+	};
+	//#endif
+
+	//#ifdef VENDOR_EDIT
+	//wanghao@Bsp.Group.TP 2017/09/20 Added for synaptics using gpio supply 2v8
+	touchpanel_vdd: touchpanel_vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "touchpanel_vdd";
+		startup-delay-us = <0>;
+		enable-active-high;
+		gpio = <&tlmm 15 0>;
+	};
+	//#endif
 };

@@ -1,0 +1,17 @@
+/* OPPO 18323 panel timing overrides */
+
+&dsi_oppo16051samsung_s6e3fa3_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [24 1f 08 09 05 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1b 08 0a 06 03 04 a0];
+};
+
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1f 08 0a 06 03 04 a0 24 1b 08 0a 06 03 04 a0];
+};
+
+&dsi_oppo17081samsung_ams596w401_1080_2280_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 1e 09 0a 06 03 04 a0];
+};
+
+&dsi_oppo18005samsung_ams641rw01_1080_2340_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 20 09 0c 06 03 04 a0 20 1e 09 0a 06 03 04 a0];
+};

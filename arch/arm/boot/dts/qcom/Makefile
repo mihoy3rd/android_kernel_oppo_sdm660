@@ -1,3 +1,38 @@
+ifeq ($(CONFIG_MACH_OPPO),y)
+
+ifeq ($(CONFIG_MACH_OPPO_SDM660),y)
+
+	# OPPO R11 (16051 16103 16118)
+	dtb-$(CONFIG_MACH_OPPO_R11) += \
+		sdm660-pm660a-mtp-16051.dtb \
+		sdm660-pm660a-mtp-16103.dtb \
+		sdm660-pm660a-mtp-16118.dtb
+
+	# OPPO R11s (17011 17021)
+	dtb-$(CONFIG_MACH_OPPO_R11S) += \
+		sdm660-pm660a-mtp-17011.dtb \
+		sdm660-pm660a-mtp-17021.dtb
+
+	# OPPO R15 Pro (17081)
+	dtb-$(CONFIG_MACH_OPPO_PAAM00) += \
+		sdm660-pm660a-mtp-17081.dtb
+
+	# TODO: (17085)
+	dtb-n += \
+		sdm660-pm660a-mtp-17085.dtb
+
+	# OPPO R15x & K1 (18005)
+	dtb-$(CONFIG_MACH_OPPO_PBCM10) += \
+		sdm660-pm660a-mtp-18005.dtb
+
+	# TODO: (18323)
+	dtb-n += \
+		sdm660-pm660a-mtp-18323.dtb
+
+endif # CONFIG_MACH_OPPO_SDM660
+
+else # CONFIG_MACH_OPPO
+
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
 dtbo-$(CONFIG_ARCH_MSM8996) += \
 	msm8996-mtp-overlay.dtbo \
@@ -324,6 +359,8 @@ dtb-$(CONFIG_ARCH_SDM630) += sdm630-rumi.dtb \
 	sdm455-cdp.dtb \
 	sdm455-rcm.dtb \
 	sdm455-internal-codec-rcm.dtb
+
+endif # CONFIG_MACH_OPPO
 
 ifeq ($(CONFIG_ARM64),y)
 always          := $(dtb-y)

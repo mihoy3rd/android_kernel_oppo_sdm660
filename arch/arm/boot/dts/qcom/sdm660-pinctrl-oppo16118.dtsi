@@ -1,0 +1,61 @@
+/* OPPO 16118 pinctrl overrides — correct VENDOR_EDIT values */
+
+&cam_sensor_rear_active {
+	mux {
+		pins = "gpio48", "gpio50"; 
+	};
+	config {
+		pins = "gpio48", "gpio50";
+	};
+};
+
+&cam_sensor_rear_suspend {
+	mux {
+		pins = "gpio48", "gpio50"; 
+	};
+	config {
+		pins = "gpio48", "gpio50";
+	};
+};
+
+&cam_sensor_rear2_active {
+	mux {
+		pins = "gpio46", "gpio35"; 
+	};
+	config {
+		pins = "gpio46", "gpio35";
+	};
+};
+
+&cam_sensor_rear2_suspend {
+	mux {
+		pins = "gpio46", "gpio35"; 
+	};
+	config {
+		pins = "gpio46", "gpio35";
+	};
+};
+
+&cam_sensor_front_active {
+	mux {
+		pins = "gpio47", "gpio64", "gpio35"; 
+	};
+	config {
+		pins = "gpio47", "gpio64", "gpio35";
+	};
+};
+
+&cam_sensor_front_suspend {
+	mux {
+		pins = "gpio47", "gpio64", "gpio35"; 
+	};
+	config {
+		pins = "gpio47", "gpio64", "gpio35";
+	};
+};
+
+&sdc1_clk_on {
+	config {
+		drive-strength = <10>;
+	};
+};
