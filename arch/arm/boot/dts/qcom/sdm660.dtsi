@@ -1637,6 +1637,18 @@
 		qcom,guard-memory;
 	};
 
+    //#ifndef VENDOR_EDIT
+    //Zhengpeng.Tan@NW.AP.NV.892767, 2016/11/30
+    //add for creating a shared memory with uio for nv backup and restore
+    qcom,oembackup_sharedmem@0 {
+        compatible = "qcom,sharedmem-uio";
+        reg = <0x0 0x00100000>;
+        reg-names = "oembackup";
+        qcom,client-id = <0x00000004>;
+		qcom,guard-memory;
+    };
+    //#endif /* VENDOR_EDIT */
+
 	qcom,rmnet-ipa {
 		compatible = "qcom,rmnet-ipa";
 		qcom,rmnet-ipa-ssr;
