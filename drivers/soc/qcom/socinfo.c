@@ -602,6 +602,8 @@ uint32_t socinfo_get_version(void)
 {
 	return (socinfo) ? socinfo->v0_1.version : 0;
 }
+//jie.cheng@swdp.shanghai, 2015/11/09, export some symbol
+EXPORT_SYMBOL_GPL(socinfo_get_version);
 
 char *socinfo_get_build_id(void)
 {

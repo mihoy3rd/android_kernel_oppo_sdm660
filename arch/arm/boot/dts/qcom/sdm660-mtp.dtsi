@@ -22,8 +22,11 @@
 
 &uartblsp1dm1 {
 	status = "ok";
-	pinctrl-names = "default";
+	//pinctrl-names = "default";
+	//pinctrl-0 = <&uart_console_active>;
+	pinctrl-names = "default", "disable";
 	pinctrl-0 = <&uart_console_active>;
+	pinctrl-1 = <&uart_console_disable>;
 };
 
 &ufsphy1 {
@@ -94,27 +97,21 @@
 	qcom,mdss-pref-prim-intf = "dsi";
 };
 
-&mdss_dsi {
-	hw-config = "split_dsi";
-};
+	&mdss_dsi {
+		hw-config = "single_dsi";
+	};
 
-&mdss_dsi0 {
-	qcom,dsi-pref-prim-pan = <&dsi_dual_nt35597_truly_video>;
-	pinctrl-names = "mdss_default", "mdss_sleep";
-	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
-	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
-	qcom,platform-reset-gpio = <&tlmm 53 0>;
-	qcom,platform-te-gpio = <&tlmm 59 0>;
-};
+	&mdss_dsi0 {
+		oledb-supply = <&pm660a_oledb>;
+		lab-supply = <&lab_regulator>;
+		ibb-supply = <&ibb_regulator>;
+	};
 
-&mdss_dsi1 {
-	qcom,dsi-pref-prim-pan = <&dsi_dual_nt35597_truly_video>;
-	pinctrl-names = "mdss_default", "mdss_sleep";
-	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
-	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
-	qcom,platform-reset-gpio = <&tlmm 53 0>;
-	qcom,platform-te-gpio = <&tlmm 59 0>;
-};
+	&mdss_dsi1 {
+		oledb-supply = <&pm660a_oledb>;
+		lab-supply = <&lab_regulator>;
+		ibb-supply = <&ibb_regulator>;
+	};
 
 &mdss_dp_ctrl {
 	pinctrl-names = "mdss_dp_active", "mdss_dp_sleep";
@@ -219,7 +216,8 @@
 
 &sdhc_2 {
 	/* device core power supply */
-	vdd-supply = <&pm660l_l5>;
+	vdd-supply = <&sdhc2_vdd_vreg>;
+
 	qcom,vdd-voltage-level = <2950000 2950000>;
 	qcom,vdd-current-level = <15000 800000>;
 
@@ -228,9 +226,12 @@
 	qcom,vdd-io-voltage-level = <1800000 2950000>;
 	qcom,vdd-io-current-level = <200 22000>;
 
-	pinctrl-names = "active", "sleep";
-	pinctrl-0 = <&sdc2_clk_on &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
-	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+//rendong.shi@Bsp.Storage.card,2016/12/21,Added for vdd_en using gpio supply 3V
+	pinctrl-names = "default", "active", "sleep";
+	pinctrl-0 = <&sdc2_cd_on &sim1_cd_on &sim2_cd_on>;
+	pinctrl-1 = <&sdc2_clk_on  &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
+	pinctrl-2 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+
 
 	#address-cells = <0>;
 	interrupt-parent = <&sdhc_2>;
@@ -241,8 +242,8 @@
 			1 &intc 0 0 221 0
 			2 &tlmm 54 0>;
 	interrupt-names = "hc_irq", "pwr_irq", "status_irq";
-	cd-gpios = <&tlmm 54 0x1>;
-
+//rendong.shi@Bsp.Storage.card,2016/12/21,Added for vdd_en using gpio supply 3V
+	cd-gpios = <&tlmm 54 0x0>;
 	qcom,clk-rates = <400000 20000000 25000000 50000000 100000000
 								200000000>;
 	qcom,bus-speed-mode = "SDR12", "SDR25", "SDR50", "DDR50", "SDR104";
@@ -251,6 +252,7 @@
 };
 
 &soc {
+
 	qcom,msm-ssc-sensors {
 		compatible = "qcom,msm-ssc-sensors";
 	};
@@ -264,14 +266,3 @@
 	qcom,battery-data = <&mtp_batterydata>;
 };
 
-&i2c_2 {
-	status = "ok";
-	smb1351-charger@1d {
-		compatible = "qcom,smb1351-charger";
-		reg = <0x1d>;
-		qcom,parallel-charger;
-		qcom,float-voltage-mv = <4400>;
-		qcom,recharge-mv = <100>;
-		qcom,parallel-en-pin-polarity = <1>;
-	};
-};

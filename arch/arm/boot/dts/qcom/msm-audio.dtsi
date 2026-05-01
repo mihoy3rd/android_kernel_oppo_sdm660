@@ -116,15 +116,31 @@
 		dai_mi2s0: qcom,msm-dai-q6-mi2s-prim {
 			compatible = "qcom,msm-dai-q6-mi2s";
 			qcom,msm-dai-q6-mi2s-dev-id = <0>;
-			qcom,msm-mi2s-rx-lines = <3>;
+			qcom,msm-mi2s-rx-lines = <1>;
 			qcom,msm-mi2s-tx-lines = <0>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&pri_mi2s_active
+					&pri_mi2s_mclk_active
+					&pri_mi2s_ws_active
+					&pri_mi2s_sd0_active>;
+			pinctrl-1 = <&pri_mi2s_sleep
+					&pri_mi2s_mclk_sleep
+					&pri_mi2s_ws_sleep
+					&pri_mi2s_sd0_sleep>;
 		};
 
 		dai_mi2s1: qcom,msm-dai-q6-mi2s-sec {
 			compatible = "qcom,msm-dai-q6-mi2s";
 			qcom,msm-dai-q6-mi2s-dev-id = <1>;
 			qcom,msm-mi2s-rx-lines = <1>;
-			qcom,msm-mi2s-tx-lines = <0>;
+			qcom,msm-mi2s-tx-lines = <2>;
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&sec_mi2s_active
+					&sec_mi2s_sd0_active
+					&sec_mi2s_sd1_active>;
+			pinctrl-1 = <&sec_mi2s_sleep
+					&sec_mi2s_sd0_sleep
+					&sec_mi2s_sd1_sleep>;
 		};
 
 		dai_mi2s3: qcom,msm-dai-q6-mi2s-quat {
@@ -370,6 +386,10 @@
 
 	hostless: qcom,msm-pcm-hostless {
 		compatible = "qcom,msm-pcm-hostless";
+		/*Jianfeng.Qiu@PSW.MM.AudioDriver.Machine, 2017/12/19, Add for card register fail*/
+		audio_test_mod {
+			compatible = "qcom,audio-test-mod";
+		};
 	};
 
 	dai_pri_auxpcm: qcom,msm-pri-auxpcm {
@@ -601,6 +621,8 @@
 	};
 
 	tasha_snd: sound-9335 {
+		/*xiang.fei@PSW.MM.AudioDriver.Machine, 2017/01/26, Add for audio config*/
+		status = "disabled";
 		compatible = "qcom,sdm660-asoc-snd-tasha";
 		qcom,model = "sdm660-tasha-snd-card";
 		qcom,wcn-btfm;
@@ -707,6 +729,8 @@
 	};
 
 	tavil_snd: sound-tavil {
+		/*xiang.fei@PSW.MM.AudioDriver.Machine, 2017/01/26, Add for audio config*/
+		status = "disabled";
 		compatible = "qcom,sdm660-asoc-snd-tavil";
 		qcom,model = "sdm660-tavil-snd-card";
 		qcom,wcn-btfm;
@@ -812,17 +836,19 @@
 	};
 
 	int_codec: sound {
-		status = "disabled";
 		compatible = "qcom,sdm660-asoc-snd";
 		qcom,model = "sdm660-snd-card";
+		qcom,wsa-disable;
 		qcom,wcn-btfm;
 		qcom,mi2s-audio-intf;
 		qcom,auxpcm-audio-intf;
 		qcom,ext-disp-audio-rx;
-		qcom,msm-mi2s-master = <1>, <1>, <1>, <1>;
+		qcom,msm-mi2s-master = <0>, <1>, <0>, <0>;
+		qcom,msm-mi2s-ext-mclk = <1>,<0>,<0>,<0>;
 		qcom,msm-mclk-freq = <9600000>;
 		qcom,msm-mbhc-hphl-swh = <1>;
-		qcom,msm-mbhc-gnd-swh = <1>;
+		qcom,msm-mbhc-gnd-swh = <0>;
+		qcom,msm-micbias1-ext-cap;
 		qcom,msm-micbias2-ext-cap;
 		qcom,msm-hs-micbias-type = "external";
 		qcom,us-euro-gpios = <&us_euro_gpio>;
@@ -918,6 +944,11 @@
 				<&wsa881x_213_en>, <&wsa881x_214_en>;
 		qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
 					  "SpkrLeft", "SpkrRight";
+		/* Jianfeng.Qiu@PSW.MM.AudioDriver.Machine, 2017/01/23,
+		 * Add for custom audio.
+		 */
+		oppo,headphone-pa = "akm";
+		oppo,speaker-pa = "nxp";
 	};
 
 	us_euro_gpio: msm_cdc_pinctrl@75 {
@@ -936,6 +967,8 @@
 	};
 
 	clock_audio: audio_ext_clk {
+		/*xiang.fei@PSW.MM.AudioDriver.Machine, 2017/01/26, Delete for audio config*/
+		//status = "disabled";
 		compatible = "qcom,audio-ref-clk";
 		qcom,audio-ref-clk-gpio = <&pm660_gpios 3 0>;
 		clock-names = "osr_clk";

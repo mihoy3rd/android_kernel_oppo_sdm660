@@ -15,7 +15,7 @@
 #include "sdm660-lpi.dtsi"
 
 &slim_aud {
-	status = "okay";
+	status = "disabled";
 	dai_slim: msm_dai_slim {
 		compatible = "qcom,msm-dai-slim";
 		elemental-addr = [ff ff ff fe 17 02];
@@ -55,6 +55,8 @@
 	};
 
 	wcd934x_cdc: tavil_codec {
+		/*xiang.fei@PSW.MM.AudioDriver.Machine, 2017/01/26, Add for audio config*/
+		status = "disabled";
 		compatible = "qcom,tavil-slim-pgd";
 		elemental-addr = [00 01 50 02 17 02];
 
@@ -113,7 +115,7 @@
 
 &pm660l_3 {
 	pmic_analog_codec: analog-codec@f000 {
-		status = "disabled";
+		status = "okay";
 		compatible = "qcom,pmic-analog-codec";
 		reg = <0xf000 0x200>;
 		#address-cells = <2>;
@@ -167,6 +169,10 @@
 					   "cdc-vdd-pa";
 
 		qcom,cdc-on-demand-supplies = "cdc-vdd-mic-bias";
+		/*xiang.fei@PSW.MM.AudioDriver.Codec, 2017/01/26,
+		 *Add for set micbias output voltage 2.7v.
+		 */
+		qcom,cdc-micbias-cfilt-mv = <2700000>;
 
 		/*
 		 * Not marking address @ as driver searches this child

@@ -195,7 +195,7 @@ static bool msm_swap_gnd_mic(struct snd_soc_codec *codec);
 static struct wcd_mbhc_config mbhc_cfg = {
 	.read_fw_bin = false,
 	.calibration = NULL,
-	.detect_extn_cable = true,
+	.detect_extn_cable = false,
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
@@ -3033,6 +3033,9 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	int ret = -EINVAL, id;
 	const struct of_device_id *match;
 
+	/* Jianfeng.Qiu@PSW.MM.AudioDriver.Machine,2017/09/21, Add for log*/
+	pr_info("%s: *** Enter\n", __func__);
+
 	pdata = devm_kzalloc(&pdev->dev,
 			     sizeof(struct msm_asoc_mach_data),
 			     GFP_KERNEL);
@@ -3146,6 +3149,9 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	}
 	if (pdata->snd_card_val != INT_SND_CARD)
 		msm_ext_register_audio_notifier(pdev);
+
+	/* Jianfeng.Qiu@PSW.MM.AudioDriver.Machine,2017/09/21, Add for log*/
+	pr_info("%s: sond card register success.\n", __func__);
 
 	return 0;
 err:

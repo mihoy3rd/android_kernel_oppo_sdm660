@@ -27,6 +27,18 @@
 #include "dsi-panel-rm67195-amoled-fhd-cmd.dtsi"
 #include "dsi-panel-lgd-incell-sw49106-fhd-video.dtsi"
 #include "dsi-panel-hx8399c-fhd-plus-video.dtsi"
+//Shengjun.Gou@PSW.MM.Display.LCD.Stability, 2017/09/18,
+// add for panel config files.
+#include "dsi-panel-oppo16051samsung_s6e3fa3_1080p_cmd.dtsi"
+#include "dsi-panel-oppo16103jdi_r63452_1080p_cmd.dtsi"
+#include "dsi-panel-oppo16118samsung_s6e3fa3_1080p_cmd.dtsi"
+#include "dsi-panel-oppo17011samsung_sofeg01_1080p_cmd.dtsi"
+#include "dsi-panel-oppo17021samsung_sofeg01_1080p_cmd.dtsi"
+#include "dsi-panel-oppo17011samsung_ams596w401_1080_2280_cmd.dtsi"
+#include "dsi-panel-oppo16051samsung_ams596w401_1080_2280_cmd.dtsi"
+#include "dsi-panel-oppo17081samsung_ams596w401_1080_2280_cmd.dtsi"
+#include "dsi-panel_oppo18005samsung_ams641rw01_1080_2340.dtsi"
+
 
 &soc {
 	dsi_panel_pwr_supply: dsi_panel_pwr_supply {

@@ -307,7 +307,7 @@
 					dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,slotselect,verify";
+					fsmgr_flags = "wait,verify";
 					status = "ok";
 				};
 			};
@@ -334,7 +334,9 @@
 		removed_regions: removed_regions@85800000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x85800000 0x0 0x3700000>;
+                        //Long.Liu@BSP.Fingerprint.Basic, 2018/9/29, add to enlarge memory of tz to 60M
+			//reg = <0x0 0x85800000 0x0 0x3700000>;
+                        reg = <0x0 0x85800000 0x0 0x5300000>;
 		};
 
 		modem_fw_mem: modem_fw_region@8ac00000 {
@@ -346,19 +348,19 @@
 		adsp_fw_mem: adsp_fw_region@92a00000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x92a00000 0x0 0x1e00000>;
+			reg = <0x0 0x92a00000 0x0 0x2000000>; //increase 2M, 30M -> 32M
 		};
 
-		pil_mba_mem: pil_mba_region@94800000 {
+		pil_mba_mem: pil_mba_region@94a00000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x94800000 0x0 0x200000>;
+			reg = <0x0 0x94a00000 0x0 0x200000>; //pil start address +2M
 		};
 
-		cdsp_fw_mem: cdsp_fw_region@94a00000 {
+		cdsp_fw_mem: cdsp_fw_region@94c00000 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x94a00000 0x0 0x600000>;
+			reg = <0x0 0x94c00000 0x0 0x600000>; //cdsp start address +2M
 		};
 
 		venus_fw_mem: venus_fw_region {
@@ -404,14 +406,10 @@
 		};
 
 		cont_splash_mem: splash_region@9d400000 {
-			reg = <0x0 0x9d400000 0x0 0x23ff000>;
+			reg = <0x0 0x9d400000 0x0 0x02400000>;
 			label = "cont_splash_mem";
 		};
 
-		dfps_data_mem: dfps_data_mem@0x9f7ff000 {
-		       reg = <0 0x9f7ff000 0 0x00001000>;
-		       label = "dfps_data_mem";
-		};
 	};
 
 	bluetooth: bt_wcn3990 {
@@ -614,7 +612,8 @@
 		reg = <0x17817000 0x1000>;
 		reg-names = "wdt-base";
 		interrupts = <0 3 0>, <0 4 0>;
-		qcom,bark-time = <11000>;
+		//qcom,bark-time = <11000>;
+		qcom,bark-time = <20000>;
 		qcom,pet-time = <10000>;
 		qcom,ipi-ping;
 		qcom,wakeup-enable;
@@ -677,6 +676,8 @@
 		clock-names = "core", "iface";
 	};
 
+/* Ziqing.Guo@BSP.Fingerprint.Basic 2017/11/23, Remove for don't need qcom fingerprint sensor*/
+/*
 	qcom,qbt1000 {
 		compatible = "qcom,qbt1000";
 		clock-names = "core", "iface";
@@ -686,6 +687,7 @@
 		qcom,ipc-gpio = <&tlmm 72 0>;
 		qcom,finger-detect-gpio = <&pm660_gpios 11 0>;
 	};
+*/
 
 	qcom,sensor-information {
 		compatible = "qcom,sensor-information";
@@ -869,6 +871,7 @@
 		reg = <0x1fe5040 0x28>;
 	};
 
+/*
 	qcom,bcl {
 		compatible = "qcom,bcl";
 		qcom,bcl-enable;
@@ -883,6 +886,7 @@
 			qcom,soc-low-threshold = <10>;
 		};
 	};
+*/
 
 	qcom,lmh {
 		compatible = "qcom,lmh_v1";
@@ -1300,16 +1304,6 @@
 			<  1536000000 0x04040050 0x08400040 0x2 6 >,
 			<  1612800000 0x04040054 0x09430043 0x2 7 >;
 
-		qcom,pwrcl-speedbin4-v0 =
-			<   300000000 0x0004000f 0x01200020 0x1 1 >,
-			<   633600000 0x05040021 0x03200020 0x1 2 >,
-			<   902400000 0x0404002f 0x04260026 0x1 3 >,
-			<  1113600000 0x0404003a 0x052e002e 0x2 4 >,
-			<  1401600000 0x04040049 0x073a003a 0x2 5 >,
-			<  1536000000 0x04040050 0x08400040 0x2 6 >,
-			<  1747200000 0x0404005b 0x09480048 0x2 7 >,
-			<  1843200000 0x04040060 0x094c004c 0x3 8 >;
-
 		qcom,perfcl-speedbin0-v0 =
 			<   300000000 0x0004000f 0x01200020 0x1 1 >,
 			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
@@ -1334,13 +1328,6 @@
 			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
 			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
 			<  1804800000 0x0404005e 0x094b004b 0x2 5 >;
-
-		qcom,perfcl-speedbin4-v0 =
-			<   300000000 0x0004000f 0x01200020 0x1 1 >,
-			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
-			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
-			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
-			<  1958400000 0x04040066 0x0a510051 0x2 5 >;
 
 		qcom,up-timer = <1000 1000>;
 		qcom,down-timer = <1000 1000>;
@@ -1575,13 +1562,23 @@
 		};
 	};
 
-	qcom,rmtfs_sharedmem@0 {
+	qcom,rmtfs_sharedmem@85e00000 {
 		compatible = "qcom,sharedmem-uio";
-		reg = <0x0 0x200000>;
+		reg = <0x85e00000 0x200000>;
 		reg-names = "rmtfs";
 		qcom,client-id = <0x00000001>;
-		qcom,guard-memory;
 	};
+
+    //Zhengpeng.Tan@NW.AP.NV.892767, 2016/11/30
+    //#ifdef FEATURE_OPPO_NV_BACKUP
+    //add for creating a shared memory with uio for nv backup and restore
+    qcom,oembackup_sharedmem@0 {
+        compatible = "qcom,sharedmem-uio";
+        reg = <0x0 0x00100000>;
+        reg-names = "oembackup";
+        qcom,client-id = <0x00000004>;
+    };
+    //#endif /* FEATURE_OPPO_NV_BACKUP */
 
 	qcom,rmnet-ipa {
 		compatible = "qcom,rmnet-ipa";
@@ -1989,7 +1986,7 @@
 		vdd-1.8-xo-supply = <&pm660_l9_pin_ctrl>;
 		vdd-1.3-rfa-supply = <&pm660_l6_pin_ctrl>;
 		vdd-3.3-ch0-supply = <&pm660_l19_pin_ctrl>;
-		qcom,vdd-0.8-cx-mx-config = <848000 848000>;
+		qcom,vdd-0.8-cx-mx-config = <525000 950000>;
 		qcom,vdd-1.8-xo-config = <1750000 1900000>;
 		qcom,vdd-1.3-rfa-config = <1200000 1370000>;
 		qcom,vdd-3.3-ch0-config = <3200000 3400000>;
@@ -2106,7 +2103,6 @@
 		qcom,qdsp6v62-1-5;
 		memory-region = <&modem_fw_mem>;
 		qcom,mem-protect-id = <0xF>;
-		qcom,complete-ramdump;
 		qcom,cx-ipeak-vote;
 
 		/* GPIO inputs from mss */
@@ -2209,14 +2205,17 @@
 
 	qcom_seecom: qseecom@86d00000 {
 		compatible = "qcom,qseecom";
-		reg = <0x86d00000 0x2200000>;
+                //Long.Liu@BSP.Fingerprint.Basic, 2018/9/29, add to enlarge memory of tz to 60M
+                //reg = <0x86d00000 0x2200000>;
+                reg = <0x86d00000 0x03E00000>;
 		reg-names = "secapp-region";
 		qcom,hlos-num-ce-hw-instances = <1>;
 		qcom,hlos-ce-hw-instance = <0>;
 		qcom,qsee-ce-hw-instance = <0>;
 		qcom,disk-encrypt-pipe-pair = <2>;
 		qcom,support-fde;
-		qcom,fde-key-size;
+                //Long.Liu@BSP.Fingerprint.Basic, 2017/12/15, Remove for keymaster compatible when Android O ota update to Android P
+		//qcom,fde-key-size;
 		qcom,no-clock-support;
 		qcom,msm-bus,name = "qseecom-noc";
 		qcom,msm-bus,num-cases = <4>;
@@ -2630,8 +2629,18 @@
 #include "sdm660-audio.dtsi"
 
 &pm660l_gpios {
-	/* GPIO 7 for VOL_UP */
-	gpio@c600 {
+	/* GPIO 8 for VOL_UP */
+	gpio@c700 {
+		status = "okay";
+		qcom,mode = <0>;
+		qcom,pull = <0>;
+		qcom,vin-sel = <0>;
+		qcom,src-sel = <0>;
+		qcom,out-strength = <1>;
+	};
+	
+	/* GPIO 5 for VOL_UP */
+	gpio@c400 {
 		status = "okay";
 		qcom,mode = <0>;
 		qcom,pull = <0>;
@@ -2640,6 +2649,7 @@
 		qcom,out-strength = <1>;
 	};
 };
+
 
 &msm_vidc {
 	qcom,cx-ipeak-data = <&cx_ipeak_lm 4>;
@@ -2651,31 +2661,20 @@
 		status = "okay";
 		compatible = "gpio-keys";
 		input-name = "gpio-keys";
-		pinctrl-names = "tlmm_gpio_key_active","tlmm_gpio_key_suspend";
-		pinctrl-0 = <&gpio_key_active>;
-		pinctrl-1 = <&gpio_key_suspend>;
-
-		camera_focus {
-			label = "camera_focus";
-			gpios = <&tlmm 64 0x1>;
-			linux,input-type = <1>;
-			linux,code = <0x210>;
-			debounce-interval = <15>;
-		};
-
-		camera_snapshot {
-			label = "camera_snapshot";
-			gpios = <&tlmm 113 0x1>;
-			linux,input-type = <1>;
-			linux,code = <0x2fe>;
-			debounce-interval = <15>;
-		};
-
 		vol_up {
 			label = "volume_up";
-			gpios = <&pm660l_gpios 7 0x1>;
+			gpios = <&pm660l_gpios 8 0x1>;
 			linux,input-type = <1>;
 			linux,code = <115>;
+			gpio-key,wakeup;
+			debounce-interval = <15>;
+		};
+		
+		vol_down {
+			label = "volume_down";
+			gpios = <&pm660l_gpios 5 0x1>;
+			linux,input-type = <1>;
+			linux,code = <114>;
 			gpio-key,wakeup;
 			debounce-interval = <15>;
 		};

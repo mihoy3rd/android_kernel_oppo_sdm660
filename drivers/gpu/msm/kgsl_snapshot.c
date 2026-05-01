@@ -703,6 +703,9 @@ container_of(a, struct kgsl_snapshot_attribute, attr)
 #define kobj_to_device(a) \
 container_of(a, struct kgsl_device, snapshot_kobj)
 
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+static bool snapshot_ontrol_on = 0;
+
 /* Dump the sysfs binary data to the user */
 static ssize_t snapshot_show(struct file *filep, struct kobject *kobj,
 	struct bin_attribute *attr, char *buf, loff_t off,
@@ -717,6 +720,13 @@ static ssize_t snapshot_show(struct file *filep, struct kobject *kobj,
 
 	if (device == NULL)
 		return 0;
+
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+    if (snapshot_ontrol_on) {
+        KGSL_DRV_ERR(device,
+                "snapshot: snapshot_ontrol_on is true, skip snapshot\n");
+        return 0;
+	}
 
 	mutex_lock(&device->mutex);
 	snapshot = device->snapshot;
@@ -890,6 +900,34 @@ static SNAPSHOT_ATTR(force_panic, 0644, force_panic_show, force_panic_store);
 static SNAPSHOT_ATTR(snapshot_crashdumper, 0644, snapshot_crashdumper_show,
 	snapshot_crashdumper_store);
 
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+
+static ssize_t snapshot_control_show(struct kgsl_device *device, char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%d\n", device->snapshot_control);
+}
+
+static ssize_t snapshot_control_store(struct kgsl_device *device, const char *buf,
+	size_t count)
+{
+	unsigned int val = 0;
+	int ret;
+
+	if (device && count > 0)
+		device->snapshot_control = 0;
+
+	ret = kgsl_sysfs_store(buf, &val);
+
+	if (!ret && device){
+		device->snapshot_control = (bool)val;
+		snapshot_ontrol_on = device->snapshot_control;
+	}
+
+	return (ssize_t) ret < 0 ? ret : count;
+}
+
+static SNAPSHOT_ATTR(snapshot_control, 0666, snapshot_control_show, snapshot_control_store);
+
 static ssize_t snapshot_sysfs_show(struct kobject *kobj,
 	struct attribute *attr, char *buf)
 {
@@ -970,6 +1008,8 @@ int kgsl_device_snapshot_init(struct kgsl_device *device)
 	device->snapshot_faultcount = 0;
 	device->force_panic = 0;
 	device->snapshot_crashdumper = 1;
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+	device->snapshot_control = 0;
 
 	ret = kobject_init_and_add(&device->snapshot_kobj, &ktype_snapshot,
 		&device->dev->kobj, "snapshot");
@@ -990,6 +1030,12 @@ int kgsl_device_snapshot_init(struct kgsl_device *device)
 
 	ret  = sysfs_create_file(&device->snapshot_kobj,
 			&attr_force_panic.attr);
+	if (ret)
+		goto done;
+
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+	ret  = sysfs_create_file(&device->snapshot_kobj,
+			&attr_snapshot_control.attr);
 	if (ret)
 		goto done;
 
@@ -1021,6 +1067,8 @@ void kgsl_device_snapshot_close(struct kgsl_device *device)
 	device->snapshot_faultcount = 0;
 	device->force_panic = 0;
 	device->snapshot_crashdumper = 1;
+//wenhua.Leng@PSW.MM.Display.GPU.minidump,2019-04-21
+	device->snapshot_control = 0;
 }
 EXPORT_SYMBOL(kgsl_device_snapshot_close);
 

@@ -50,7 +50,7 @@ EXPORT_SYMBOL(registered_fb);
 int num_registered_fb __read_mostly;
 EXPORT_SYMBOL(num_registered_fb);
 
-static struct fb_info *get_fb_info(unsigned int idx)
+struct fb_info *get_fb_info(unsigned int idx)
 {
 	struct fb_info *fb_info;
 
@@ -65,6 +65,8 @@ static struct fb_info *get_fb_info(unsigned int idx)
 
 	return fb_info;
 }
+//jie.cheng@swdp.shanghai, 2015/11/09, export some symbol
+EXPORT_SYMBOL(get_fb_info);
 
 static void put_fb_info(struct fb_info *fb_info)
 {

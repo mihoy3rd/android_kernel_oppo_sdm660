@@ -29,3 +29,8 @@ obj-$(CONFIG_INPUT_APMPOWER)	+= apm-power.o
 obj-$(CONFIG_INPUT_KEYRESET)	+= keyreset.o
 obj-$(CONFIG_INPUT_KEYCOMBO)	+= keycombo.o
 
+#Haitao.Zhou@Prd.BaseDrv, 2017/02/16 Add for fingerprint compatibility
+obj-$(CONFIG_OPPO_FINGERPRINT) += misc/oppo_fp_drivers/
+
+#Dongnan.Wu@BSP.Fingerprint.Basic, 2018/11/06 Add for securecom
+obj-y += misc/oppo_seccommon_drivers/

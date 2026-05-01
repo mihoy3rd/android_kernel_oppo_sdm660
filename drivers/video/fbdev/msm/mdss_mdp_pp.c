@@ -624,7 +624,7 @@ static int pp_update_pcc_pipe_setup(struct mdss_mdp_pipe *pipe, u32 location);
 static void mdss_mdp_hist_irq_set_mask(u32 irq);
 static void mdss_mdp_hist_irq_clear_mask(u32 irq);
 static void mdss_mdp_hist_intr_notify(u32 disp);
-static int mdss_mdp_panel_default_dither_config(struct msm_fb_data_type *mfd,
+int mdss_mdp_panel_default_dither_config(struct msm_fb_data_type *mfd,
 					u32 panel_bpp);
 static int mdss_mdp_limited_lut_igc_config(struct msm_fb_data_type *mfd);
 static inline int pp_validate_dspp_mfd_block(struct msm_fb_data_type *mfd,
@@ -4615,7 +4615,7 @@ enhist_config_exit:
 	return ret;
 }
 
-static int mdss_mdp_panel_default_dither_config(struct msm_fb_data_type *mfd,
+int mdss_mdp_panel_default_dither_config(struct msm_fb_data_type *mfd,
 					u32 panel_bpp)
 {
 	int ret = 0;

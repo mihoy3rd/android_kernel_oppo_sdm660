@@ -194,6 +194,15 @@ dtb-$(CONFIG_ARCH_SDM660) += sdm660-sim.dtb \
 	sdm660-rumi.dtb \
 	sdm660-pm660a-cdp.dtb \
 	sdm660-pm660a-mtp.dtb \
+	sdm660-pm660a-mtp-16051.dtb \
+	sdm660-pm660a-mtp-16103.dtb \
+	sdm660-pm660a-mtp-16118.dtb \
+	sdm660-pm660a-mtp-17011.dtb \
+	sdm660-pm660a-mtp-17021.dtb \
+	sdm660-pm660a-mtp-17081.dtb \
+	sdm660-pm660a-mtp-17085.dtb \
+	sdm660-pm660a-mtp-18005.dtb \
+	sdm660-pm660a-mtp-18323.dtb \
 	sdm660-pm660a-qrd.dtb \
 	sdm660-pm660a-rcm.dtb \
 	sdm660-pm660a-rumi.dtb \

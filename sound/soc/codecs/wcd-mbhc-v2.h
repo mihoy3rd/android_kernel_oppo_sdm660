@@ -27,6 +27,11 @@
 #define WCD_MONO_HS_MIN_THR	2
 #define WCD_MBHC_STRINGIFY(s)  __stringify(s)
 
+/* ChengYun.Li@PSW.MM.AudioDriver.HeadsetDet, 2020/04/12,
+* add for hs key blocking for 1s after insterting */
+extern struct delayed_work hskey_block_work;
+extern bool g_hskey_block_flag;
+
 enum {
 	WCD_MBHC_ELEC_HS_INS,
 	WCD_MBHC_ELEC_HS_REM,
@@ -454,6 +459,10 @@ struct wcd_mbhc {
 
 	/* Work to correct accessory type */
 	struct work_struct correct_plug_swch;
+	/*xiang.fei@PSW.MM.AudioDriver.HeadsetDet, 2017/04/15,
+	 *Add for headset detect.
+	 */
+	struct delayed_work hp_detect_work;
 	struct notifier_block nblock;
 
 	struct wcd_mbhc_register *wcd_mbhc_regs;

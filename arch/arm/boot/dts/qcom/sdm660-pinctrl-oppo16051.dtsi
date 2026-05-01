@@ -1,0 +1,31 @@
+/* OPPO 16051 pinctrl overrides — correct VENDOR_EDIT values */
+
+&cam_sensor_rear_active {
+	mux { pins = "gpio48"; };
+	config { pins = "gpio48"; };
+};
+
+&cam_sensor_rear_suspend {
+	mux { pins = "gpio48"; };
+	config { pins = "gpio48"; };
+};
+
+&cam_sensor_rear2_active {
+	mux { pins = "gpio46"; };
+	config { pins = "gpio46"; };
+};
+
+&cam_sensor_rear2_suspend {
+	mux { pins = "gpio46"; };
+	config { pins = "gpio46"; };
+};
+
+&cam_sensor_front_active {
+	mux { pins = "gpio47"; };
+	config { pins = "gpio47"; };
+};
+
+&sdc1_clk_on {
+	config { drive-strength = <10>; };
+};
+

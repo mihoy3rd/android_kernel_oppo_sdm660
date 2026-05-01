@@ -289,4 +289,7 @@ config FILE_TABLE_DEBUG
 	help
 	  This option enables debug of the open files using a global filetable
 
+#ifdef VENDOR_EDIT
+#Xinhua.Song@BSP.Driver, 2015/04/03, Add for exfat filesystem
+#endif /*VENDOR_EDIT*/
 endmenu

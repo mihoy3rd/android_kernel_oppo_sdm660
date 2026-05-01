@@ -887,7 +887,7 @@ void msm_isp_increment_frame_id(struct vfe_device *vfe_dev,
 			 */
 			if (ms_res->src_sof_mask & (1 <<
 				src_info->dual_hw_ms_info.index)) {
-				pr_err_ratelimited("Frame out of sync on vfe %d\n",
+				ISP_DBG("Frame out of sync on vfe %d\n",
 					vfe_dev->pdev->id);
 				/*
 				 * set this isp as async mode to force
@@ -2521,7 +2521,13 @@ int msm_isp_ab_ib_update_lpm_mode(struct vfe_device *vfe_dev, void *arg)
 		rc = -1;
 		return rc;
 	}
-	if (ab_ib_vote->num_src >= VFE_AXI_SRC_MAX) {
+	if (ab_ib_vote->num_src > VFE_AXI_SRC_MAX) {
+		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
+			__func__);
+		rc = -1;
+		return rc;
+	}
+	if (ab_ib_vote->num_src > VFE_AXI_SRC_MAX) {
 		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
 			__func__);
 		rc = -1;
