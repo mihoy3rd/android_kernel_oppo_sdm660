@@ -453,6 +453,14 @@
 		       reg = <0 0x9f7ff000 0 0x00001000>;
 		       label = "dfps_data_mem";
 		};
+
+		//#ifdef VENDOR_EDIT /* Add ramoops reserved memory for pstore */
+		ramoops_mem: ramoops_region@9f800000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x9f800000 0 0x200000>;
+		};
+		//#endif /* VENDOR_EDIT */
 	};
 
 	bluetooth: bt_wcn3990 {
@@ -2595,6 +2603,17 @@
 
 		qcom,coresight-jtagmm-cpu = <&CPU7>;
 	};
+
+	//#ifdef VENDOR_EDIT /* Add ramoops reserved memory for pstore */
+	ramoops {
+		compatible = "ramoops";
+		status = "ok";
+		memory-region = <&ramoops_mem>;
+		console-size = <0x0 0x100000>; /* 1024 KB */
+		pmsg-size = <0x0 0x80000>; /* 512 KB */
+		record-size = <0x0 0x20000>; /* 128 KB */
+	};
+	//#endif /* VENDOR_EDIT */
 };
 
 #include "sdm660-ion.dtsi"
