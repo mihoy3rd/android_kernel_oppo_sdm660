@@ -198,7 +198,14 @@ static bool msm_swap_gnd_mic(struct snd_soc_codec *codec);
 static struct wcd_mbhc_config mbhc_cfg = {
 	.read_fw_bin = false,
 	.calibration = NULL,
-	.detect_extn_cable = true,
+	//#ifndef VENDOR_EDIT
+	/* xiang.fei@PSW.MM.AudioDriver.HeadsetDet, 2017/04/10,
+	 * Modify for headset detect.
+	 */
+	// .detect_extn_cable = true,
+	//#else /* VENDOR_EDIT */
+	.detect_extn_cable = false,
+	//#endif /* VENDOR_EDIT */
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,

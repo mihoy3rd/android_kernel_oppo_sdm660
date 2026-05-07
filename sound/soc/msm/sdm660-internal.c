@@ -1309,7 +1309,14 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 		return NULL;
 
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm_int_wcd_cal)->X) = (Y))
-	S(v_hs_max, 1500);
+//#ifndef VENDOR_EDIT
+/* xiang.fei@PSW.MM.AudioDriver.HeadsetDet, 2017/03/06,
+ * Modify for headset detect.
+ */
+//	S(v_hs_max, 1500);
+//#else /* VENDOR_EDIT */
+	S(v_hs_max, 1700);
+//#endif
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(msm_int_wcd_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -1332,6 +1339,11 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
+//#ifndef VENDOR_EDIT
+/* xiang.fei@PSW.MM.AudioDriver.HeadsetDet, 2017/03/03,
+ * Modify for headset button threshold.
+ */
+/*
 	btn_low[0] = 75;
 	btn_high[0] = 75;
 	btn_low[1] = 150;
@@ -1342,6 +1354,21 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	btn_high[3] = 450;
 	btn_low[4] = 500;
 	btn_high[4] = 500;
+*/
+//#else /* VENDOR_EDIT */
+	/* Ming.Liu@PSW.MM.AudioDriver.HeadsetDet, 2017/07/12, Modify for
+		supporting line control earphone volume key up/down */
+	btn_low[0] = 60;		/* Hook ,0 ~ 160 Ohm*/
+	btn_high[0] = 130;
+	btn_low[1] = 131;
+	btn_high[1] = 131;
+	btn_low[2] = 253;		/* Volume + ,160 ~ 360 Ohm*/
+	btn_high[2] = 253;
+	btn_low[3] = 425;		/* Volume - ,360 ~ 680 Ohm*/
+	btn_high[3] = 425;
+	btn_low[4] = 426;
+	btn_high[4] = 426;
+//#endif /* VENDOR_EDIT */
 
 	return msm_int_wcd_cal;
 }
@@ -1418,6 +1445,29 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 done:
 	return 0;
 }
+
+#ifdef CONFIG_SND_SOC_AK4376
+/* Jianfeng.Qiu@PSW.MM.AudioDriver.HeadsetDAC 2015/06/03,
+ * Add for no sound when ap suspend in call.
+ */
+static int ak4376_audrx_init(struct snd_soc_pcm_runtime *rtd)
+{
+	struct snd_soc_codec *codec = rtd->codec;
+	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(codec);//&codec->dapm;
+	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
+
+	pr_err("%s(),dev_name%s\n", __func__, dev_name(cpu_dai->dev));
+
+	snd_soc_dapm_ignore_suspend(dapm, "AK4376 HPL");
+	snd_soc_dapm_ignore_suspend(dapm, "AK4376 HPR");
+	/*xiang.fei@PSW.MM.AudioDriver.HeadsetDAC, 2017/03/19, Add for kernel 4.4*/
+	snd_soc_dapm_ignore_suspend(dapm, "Playback");
+
+	snd_soc_dapm_sync(dapm);
+
+	return 0;
+}
+#endif /* CONFIG_SND_SOC_AK4376 */
 
 static int msm_sdw_audrx_init(struct snd_soc_pcm_runtime *rtd)
 {
@@ -2756,6 +2806,7 @@ static struct snd_soc_dai_link msm_int_be_dai[] = {
 };
 
 static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
+#ifndef CONFIG_SND_SOC_AK4376
 	{
 		.name = LPASS_BE_PRI_MI2S_RX,
 		.stream_name = "Primary MI2S Playback",
@@ -2771,6 +2822,24 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 	},
+#else /* CONFIG_SND_SOC_AK4376 */
+	{
+		.name = LPASS_BE_PRI_MI2S_RX,
+		.stream_name = "Primary MI2S Playback",
+		.cpu_dai_name = "msm-dai-q6-mi2s.0",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "ak4376.6-0010",
+		.codec_dai_name = "ak4376-AIF1",
+		.init = ak4376_audrx_init,
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.be_id = MSM_BACKEND_DAI_PRI_MI2S_RX,
+		.be_hw_params_fixup = msm_common_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+	},
+#endif /* CONFIG_SND_SOC_AK4376 */
 	{
 		.name = LPASS_BE_PRI_MI2S_TX,
 		.stream_name = "Primary MI2S Capture",
@@ -2785,6 +2854,7 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.ops = &msm_mi2s_be_ops,
 		.ignore_suspend = 1,
 	},
+#ifndef CONFIG_SND_SOC_TFA98XX
 	{
 		.name = LPASS_BE_SEC_MI2S_RX,
 		.stream_name = "Secondary MI2S Playback",
@@ -2800,6 +2870,23 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 	},
+#else /* CONFIG_SND_SOC_TFA98XX */
+	{
+		.name = LPASS_BE_SEC_MI2S_RX,
+		.stream_name = "Secondary MI2S Playback",
+		.cpu_dai_name = "msm-dai-q6-mi2s.1",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "tfa98xx.6-0036",
+		.codec_dai_name = "tfa98xx-aif-6-36",
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.be_id = MSM_BACKEND_DAI_SECONDARY_MI2S_RX,
+		.be_hw_params_fixup = msm_common_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+	},
+#endif /* CONFIG_SND_SOC_TFA98XX */
 	{
 		.name = LPASS_BE_SEC_MI2S_TX,
 		.stream_name = "Secondary MI2S Capture",
