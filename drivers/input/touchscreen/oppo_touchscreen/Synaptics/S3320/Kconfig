@@ -1,0 +1,4 @@
+config TOUCHPANEL_SYNAPTICS_S3320
+	bool "TP Synaptics S3320 IC enable or not for OPPO"
+	---help---
+	say Y to enable driver for Touchpanel using synaptics S3320
