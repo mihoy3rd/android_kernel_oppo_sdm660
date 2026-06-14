@@ -1,0 +1,25 @@
+# VENDOR_EDIT
+# OPPO fingerprint common Makefile - QCOM/SDM660 only
+
+DEFS_PLATFORM = -DCONFIG_OPPO_FINGERPRINT_PLATFORM=660
+ccflags-y += $(DEFS_PLATFORM)
+
+# Set project ID based on Kconfig
+ifneq ($(CONFIG_MACH_OPPO_R11),)
+DEFS_PROJ = -DCONFIG_OPPO_FINGERPRINT_PROJCT=16051
+else ifneq ($(CONFIG_MACH_OPPO_R11S),)
+DEFS_PROJ = -DCONFIG_OPPO_FINGERPRINT_PROJCT=17011
+else ifneq ($(CONFIG_MACH_OPPO_PAAM00),)
+DEFS_PROJ = -DCONFIG_OPPO_FINGERPRINT_PROJCT=17081
+else ifneq ($(CONFIG_MACH_OPPO_PBCM10),)
+DEFS_PROJ = -DCONFIG_OPPO_FINGERPRINT_PROJCT=18005
+endif
+ccflags-y += $(DEFS_PROJ)
+
+# Enable optical IRQ handler for PBCM10 (R15x/K1) which has optical under-display FP
+ifneq ($(CONFIG_MACH_OPPO_PBCM10),)
+DEFS_IRQ = -DCONFIG_OPTICAL_IRQ_HANDLER
+ccflags-y += $(DEFS_IRQ)
+endif
+
+obj-y     +=  oppo_fp_common.o

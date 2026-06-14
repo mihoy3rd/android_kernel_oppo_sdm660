@@ -1,0 +1,7 @@
+# VENDOR_EDIT
+# OPPO secure common driver configuration
+
+config OPPO_SECURE_COMMON
+	bool "OPPO secure common"
+	help
+	  Say Y here to enable OPPO secure common support (secureType, secureSNBound)

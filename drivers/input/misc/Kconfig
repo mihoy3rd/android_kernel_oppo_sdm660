@@ -834,6 +834,11 @@ config INPUT_DRV2667_HAPTICS
 
 source "drivers/input/misc/ots_pat9125/Kconfig"
 
+#ifdef VENDOR_EDIT
+source "drivers/input/misc/oppo_fp_drivers/Kconfig"
+source "drivers/input/misc/oppo_seccommon_drivers/Kconfig"
+#endif /* VENDOR_EDIT */
+
 config INPUT_STMVL53L0
 	tristate "STM VL53L0 Proximity support"
 	depends on INPUT && I2C
