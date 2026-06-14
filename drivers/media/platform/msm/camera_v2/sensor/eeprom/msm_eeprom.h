@@ -48,4 +48,24 @@ struct msm_eeprom_ctrl_t {
 	uint8_t is_supported;
 };
 
+//#ifdef VENDOR_EDIT
+	/*add by hongbo.dai@camera 20170417 for support alps actuator*/
+	struct vcm_id_info {
+		uint16_t  vcm_id;
+		uint16_t  actuator_id;
+		char  alps_name[20];
+	};
+	/*add by hongbo.dai@camera 20170801 for support lens_id*/
+	struct lens_id_info {
+		uint16_t  lens_id;
+		uint16_t  user_lens_id;
+		char  lens_info[20];
+	};
+	/*Added by Hongbo.Dai@Camera 201901 for [module Sensor info]*/
+	struct sensor_string_info {
+		uint16_t value;
+		char string[20];
+	};
+//#endif
+
 #endif

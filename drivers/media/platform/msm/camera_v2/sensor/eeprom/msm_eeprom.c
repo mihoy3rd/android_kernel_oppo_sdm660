@@ -18,11 +18,80 @@
 #include "msm_cci.h"
 #include "msm_eeprom.h"
 
+//#ifdef VENDOR_EDIT
+/*Add by Zhengrong.Zhang@Camera 20160630 for merge basic modification*/
+#include <linux/proc_fs.h>
+
+#define EEPROM_REG_MODULE_ID_L     0x00
+#define EEPROM_REG_MODULE_ID_H     0x01
+/*Add by Hongbo.Dai@Camera 20170411 for get base info*/
+#define EEPROM_REG_MODULE_DAY      0x02
+#define EEPROM_REG_MODULE_MONTH    0x03
+#define EEPROM_REG_MODULE_YEAR_L   0x04
+#define EEPROM_REG_MODULE_YEAR_H   0x05
+#define EEPROM_REG_SENSOR_ID_L     0x06
+#define EEPROM_REG_SENSOR_ID_H     0x07
+/*Add by Hongbo.Dai@Camera 20170801 for get LENS ID*/
+#define EEPROM_REG_LENS_ID_L       0x08
+#define EEPROM_REG_LENS_ID_H       0x09
+#define EEPROM_REG_VCM_ID_L     0x0A
+#define EEPROM_REG_VCM_ID_H     0x0B
+#define EEPROM_BASE_INFO_SIZE   (EEPROM_REG_VCM_ID_H+1)
+//#endif
+
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
 DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 #ifdef CONFIG_COMPAT
+//#ifdef VENDOR_EDIT
+/*Added by Jinshui.Liu@Camera 20160821 for [module vendor info]*/
+uint16_t rear_module = 0;
+uint16_t rear_sensor = 0;
+uint16_t front_module = 0;
+uint16_t front_sensor = 0;
+/*oppo hufeng 20170224 add for back aux camera module vendor info*/
+uint16_t rear2_module = 0;
+uint16_t rear2_sensor = 0;
+
+/*bit1 front, bit0 rear*/
+uint16_t eeprom_probe_info = 0x0000;
+
+/*oppo hongbo.dai 20170418 add for alps VCM info*/
+struct vcm_id_info eeprom_alps_info[] = {
+	{0x58, 0x01, "ALPS-961B"},
+};
+/*oppo hongbo.dai 20170801 add for lens id info*/
+struct lens_id_info eeprom_lens_info[] = {
+	{0x5b, 0x01, "Lens-Sunny3952A"},
+	{0x5d, 0x02, "Lens-Sunny3962"},
+	{0x64, 0x03, "Lens-Largan60027A"},
+	{0x6d, 0x04, "Lens-Largan50195"},
+};
+/*oppo hongbo.dai 20170901 add for sensor info*/
+struct sensor_string_info eeprom_sensor_info[] = {
+	{0x17, "imx258"},
+	{0x18, "imx298"},
+	{0x1a, "imx398"},
+	{0x36, "s5k3l8"},
+	{0x1b, "imx371"},
+	{0x1c, "imx350"},
+	{0x1b, "imx376"},
+	{0x1e, "imx376k"},
+	{0x53, "imx576"},
+	{0x37, "s5k3p3"},
+	{0x38, "s5k3p3sp"},
+	{0x3d, "s5k2p7sq"},
+	{0x3a, "s5k3p8"},
+	{0x3b, "s5k3p8sp"},
+	{0x3c, "s5k2t7sp"},
+	{0x3e, "s5k2t7sx"},
+	{0x3f, "s5k2t7sm"},
+	{0x28, "ov13855_f13v08b"},
+	{0x29, "ov20880"},
+};
+//#endif
+
 static struct v4l2_file_operations msm_eeprom_v4l2_subdev_fops;
 #endif
 

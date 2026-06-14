@@ -1783,12 +1783,20 @@ static int msm_ispif_init(struct ispif_device *ispif,
 	if (rc)
 		goto error_ahb;
 	ispif->ispif_state = ISPIF_POWER_UP;
+//#ifdef VENDOR_EDIT
+	/*Modify by Zhengrong.Zhang@Camera 20160813 for debug*/
+	ispif->ispif_sof_debug = 0;
+//#endif
 	return 0;
 
 error_ahb:
 	if (cam_config_ahb_clk(NULL, 0, CAM_AHB_CLIENT_ISPIF,
 		CAM_AHB_SUSPEND_VOTE) < 0)
 		pr_err("%s: failed to remove vote for AHB\n", __func__);
+//#ifdef VENDOR_EDIT
+	/*Modify by Zhengrong.Zhang@Camera 20160813 for debug*/
+	ispif->ispif_sof_debug = 0;
+//#endif
 	return rc;
 }
 
