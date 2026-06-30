@@ -345,8 +345,10 @@ static void msm_restart_prepare(const char *cmd)
 	if (in_panic){
 		//warm reset
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
+		/* VENDOR_EDIT: route panic warm-reset into recovery so pstore can be read */
 		qpnp_pon_set_restart_reason(
-					PON_RESTART_REASON_KERNEL);
+					PON_RESTART_REASON_RECOVERY);
+		__raw_writel(0x77665502, restart_reason);
 		flush_cache_all();
 
 		/*outer_flush_all is not supported by 64bit kernel*/

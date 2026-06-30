@@ -448,6 +448,23 @@
 			reg = <0x0 0x9d400000 0x0 0x02400000>;
 			label = "cont_splash_mem";
 		};
+
+		/* VENDOR_EDIT: ramoops reserved memory for pstore (panic/warm-reset log capture) */
+		ramoops_mem: ramoops_region@9f800000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0x0 0x9f800000 0x0 0x200000>;
+		};
+	};
+
+	/* VENDOR_EDIT: ramoops platform node for pstore */
+	ramoops {
+		compatible = "ramoops";
+		status = "ok";
+		memory-region = <&ramoops_mem>;
+		console-size = <0x0 0x100000>;
+		pmsg-size = <0x0 0x80000>;
+		record-size = <0x0 0x20000>;
 	};
 
 	bluetooth: bt_wcn3990 {
