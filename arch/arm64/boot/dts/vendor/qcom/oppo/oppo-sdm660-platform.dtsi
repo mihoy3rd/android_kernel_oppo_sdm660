@@ -10,12 +10,9 @@
 
 /* OPPO's partition layout is non-A/B and has no standalone vbmeta partition. */
 &{/firmware/android} {
+	boot_devices = "soc/c0c4000.sdhci";
 	/delete-node/ vbmeta;
-};
-
-&{/firmware/android/fstab/vendor} {
-	/* These non-A/B products do not generate legacy dm-verity metadata. */
-	fsmgr_flags = "wait";
+	/delete-node/ fstab;
 };
 
 /*
