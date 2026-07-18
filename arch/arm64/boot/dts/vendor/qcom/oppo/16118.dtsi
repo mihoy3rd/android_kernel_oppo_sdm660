@@ -1,0 +1,219 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * OPPO R11 Plusk (16118) 设备特有 dtsi
+ *
+ * 聚合共性 (oppo-sdm660-common.dtsi) + 承载 16118 特有硬件 overlay。
+ * 由入口 sdm660-pm660a-mtp-16118.dts 末尾 #include。
+ * 来源: oppo 4.4 16118/sdm660-mtp.dtsi + sdm660-pinctrl.dtsi
+ *
+ * 16118 特有项:
+ *   - 触摸: synaptics16118@20 (synaptics-s3508, tx-rx 18x31, 1080x1920,
+ *     button-type <2 0x05>, button-TRx <1 2>, spurious_fingerprint 启用)
+ *   - VOOC: stm8s 无 vooc-low-temp / 无 vooc-fw-type；bq27541/pic16f 在
+ *   - 指纹: goodix_fp 无此节点 (oppo 4.4 16118 源码无); fpc 由 common 提供
+ *   - devinfo: 仅 sub_hwid_1 (gpio30, 1 个 GPIO); 无 sub_hwid_2 / 无 RFver_gpio
+ *     （差异表称有 sub_hwid_2，实勘 oppo 4.4 16118 源码仅有 sub_hwid_1，以源码为准）
+ *   - 无 RFver pinctrl group
+ */
+#include "../dsi-panel-oppo17011samsung_sofeg01_1080p_cmd-16051-16103-16118.dtsi"
+#include "../dsi-panel-oppo17021samsung_sofeg01_1080p_cmd-16051-16103-16118.dtsi"
+#include "oppo-sdm660-common.dtsi"
+
+/* ===== 16118 特有硬件 overlay ===== */
+
+/* 16118 LCD uses EXITS/ERR only; GPIO63 POC belongs to the AMOLED boards. */
+&mdss_dsi0 {
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
+			&mdss_exits_active &mdss_err_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend
+			&mdss_exits_suspend &mdss_err_suspend>;
+};
+
+/* These alternate AMOLED panels retain the stock five-rail LAB/IBB table. */
+&dsi_rm67195_amoled_fhd_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply_labibb_amoled>;
+};
+
+&dsi_oppo16051samsung_s6e3fa3_1080p_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply_labibb_amoled>;
+};
+
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply_labibb_amoled>;
+};
+
+/* The production S6E3FA3 panel uses the two-LDO table above.  Match the stock
+ * final DTB and keep the PMIC display boost blocks off on this project. */
+&pm660a_oledb {
+	status = "disabled";
+};
+
+&pm660a_labibb {
+	status = "disabled";
+};
+
+/* 16118 uses the regulator-powered AK4376 and MAX98927L amplifier. */
+&i2c_6 {
+	status = "okay";
+
+	ak4376@10 {
+		compatible = "akm,ak4376";
+		reg = <0x10>;
+		ak4376,reset-gpio = <&tlmm 76 0x00>;
+		ak4376-tvdd-supply = <&pm660_l14>;
+		ak4376-avdd-supply = <&pm660_l14>;
+		ak4376-tvdd-L8-supply = <&pm660_l8>;
+		ak4376-avdd-L8-supply = <&pm660_l8>;
+		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
+		status = "disabled";
+	};
+
+	max989xx@3a {
+		compatible = "maxim,max98927L", "maxim,max98927";
+		reg = <0x3a>;
+		interleave_mode = <0>;
+		vmon-slot-no = <0>;
+		imon-slot-no = <1>;
+		/* See 16103: the 4.19 codec lacks OPPO reset/regulator and machine
+		 * integration, so do not bind a partially described amplifier. */
+		status = "disabled";
+	};
+};
+
+/* Plus camera reset/standby wiring differs from the smaller projects. */
+&cam_sensor_rear_active {
+	mux { pins = "gpio48", "gpio50"; };
+	config { pins = "gpio48", "gpio50"; };
+};
+
+&cam_sensor_rear_suspend {
+	mux { pins = "gpio48", "gpio50"; };
+	config { pins = "gpio48", "gpio50"; };
+};
+
+&cam_sensor_rear2_active {
+	mux { pins = "gpio46", "gpio35"; };
+	config { pins = "gpio46", "gpio35"; };
+};
+
+&cam_sensor_rear2_suspend {
+	mux { pins = "gpio46", "gpio35"; };
+	config { pins = "gpio46", "gpio35"; };
+};
+
+&cam_sensor_front_active {
+	mux { pins = "gpio47", "gpio64", "gpio35"; };
+	config { pins = "gpio47", "gpio64", "gpio35"; };
+};
+
+&cam_sensor_front_suspend {
+	mux { pins = "gpio47", "gpio64", "gpio35"; };
+	config { pins = "gpio47", "gpio64", "gpio35"; };
+};
+
+/* Match the stock PM660L flash/torch startup currents. */
+&pm660l_flash0 {
+	qcom,current-ma = <750>;
+};
+
+&pm660l_flash1 {
+	qcom,current-ma = <750>;
+};
+
+&pm660l_torch0 {
+	qcom,current-ma = <108>;
+};
+
+&pm660l_torch1 {
+	qcom,current-ma = <108>;
+};
+
+/* Final PHY v2 values after the two stock 16118 panel override sections. */
+&dsi_oppo16051samsung_s6e3fa3_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1a 08 09 05 03 04 a0];
+};
+
+&dsi_oppo16103jdi_r63452_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1b 08 09 05 03 04 a0];
+};
+
+&dsi_oppo16118samsung_s6e3fa3_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 09 06 03 04 a0
+		24 1f 08 09 06 03 04 a0
+		24 1f 08 09 06 03 04 a0
+		24 1f 08 09 06 03 04 a0
+		24 1b 08 09 06 03 04 a0];
+};
+
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1f 08 09 05 03 04 a0
+		24 1b 08 09 05 03 04 a0];
+};
+
+/* --- 触摸屏 synaptics16118@20 (synaptics-s3508, tx-rx 18x31, 1080x1920) --- */
+&i2c_1 {
+	status = "okay";
+	synaptics16118@20 {
+		compatible = "synaptics-s3508";
+		reg = <0x20>;
+
+		/* Interrupt && Irq-gpio */
+		interrupt-parent = <&tlmm>;
+		interrupts = <67 0x2008>;
+
+		/* Power Config */
+		vdd_2v8-supply = <&touchpanel_vdd>;
+		vcc_1v8-supply = <&pm660_l14>;
+
+		/* Other HW Resource */
+		irq-gpio = <&tlmm 67 0x2008>;
+		reset-gpio = <&tlmm 66 0x1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+
+		touchpanel,max-num-support = <10>;
+		touchpanel,tx-rx-num = <18 31>;
+		touchpanel,panel-coords = <1080 1920>;
+		touchpanel,display-coords = <1080 1920>;
+
+		/* SW Support Feature Control */
+		black_gesture_support;
+		edge_limit_support;
+		spurious_fingerprint_support;
+		smart_gesture_support;
+
+		touchpanel,button-type = <2 0x05>;
+		touchpanel.button-TRx = <1 2>;
+	};
+};
+
+/* --- devinfo（16118: 仅 sub_hwid_1=gpio30，无 sub_hwid_2/RFver_gpio）---
+ * 注: goodix_fp 在 oppo 4.4 16118 源码中无此节点，故不写
+ * （fpc_fpc1020 / oppo_fp_common 由 oppo-sdm660-common.dtsi 共性提供）。
+ */
+&soc {
+	devinfo {
+		compatible = "oppo-devinfo";
+		Hw,sub_hwid_1 = <&tlmm 30 0x00>;
+		pinctrl-names = "default", "hw_sub_gpio_sleep";
+		pinctrl-0 = <&hw_sub_gpio_active>;
+		pinctrl-1 = <&hw_sub_gpio_sleep>;
+	};
+};
+
+#include "oppo-camera-161xx.dtsi"

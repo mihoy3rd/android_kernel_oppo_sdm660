@@ -1,0 +1,233 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * OPPO R11s Plus (17021) 设备特有 dtsi
+ *
+ * 聚合共性 (oppo-sdm660-common.dtsi) + 承载 17021 特有硬件 overlay。
+ * 由入口 sdm660-pm660a-mtp-17021.dts 末尾 #include。
+ * 来源: oppo 4.4 17021/sdm660-mtp.dtsi + sdm660-pinctrl.dtsi
+ *
+ * 17021 特有项:
+ *   - 触摸: synaptics17021@20 (synaptics-s3508, tx-rx 16x32, 1080x2160,
+ *     button-type <4>, button-TRx <0 0>, spurious_fingerprint 注释/不启用)
+ *   - VOOC: stm8s vooc-fw-type=<4> + vooc-low-temp=<120>; bq27541/pic16f
+ *   - 指纹: goodix_fp 启用 (oppo 4.4 17021 源码为有效节点); fpc 由 common 提供
+ *   - devinfo: sub_hwid_1(gpio30) + sub_hwid_2(gpio31) (2 GPIO, 无 RFver_gpio)
+ *   - 无 RFver pinctrl group
+ *   - pmic-id 仅 1 组 (已写入口 sdm660-pm660a-mtp-17021.dts)
+ */
+#include "../dsi-panel-oppo17011samsung_sofeg01_1080p_cmd.dtsi"
+#include "../dsi-panel-oppo17021samsung_sofeg01_1080p_cmd.dtsi"
+#include "oppo-sdm660-common.dtsi"
+#include "../dsi-panel-oppo17081samsung_ams596w401_1080_2280_cmd.dtsi"
+
+/* ===== 17021 特有硬件 overlay ===== */
+
+&mdss_dsi0 {
+	pinctrl-names = "mdss_default", "mdss_sleep";
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
+			&mdss_exits_active &mdss_err_active
+			&mdss_poc_1p8_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend
+			&mdss_exits_suspend &mdss_err_suspend
+			&mdss_poc_1p8_suspend>;
+};
+
+&int_codec {
+	/delete-property/ qcom,us-euro-gpios;
+};
+
+&us_euro_gpio {
+	status = "disabled";
+};
+
+/*
+ * 17021/17081 panels reverse the two AMOLED rails and use a higher load than
+ * the other projects.  Keep this table project-local so the common table is
+ * not accidentally applied to R11s Plus hardware.
+ */
+&soc {
+	oppo_dsi_panel_pwr_supply_17021: oppo_dsi_panel_pwr_supply_17021 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		qcom,panel-supply-entry@0 {
+			reg = <0>;
+			qcom,supply-name = "vdda-3p3";
+			qcom,supply-min-voltage = <3000000>;
+			qcom,supply-max-voltage = <3000000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <80>;
+			qcom,supply-post-on-sleep = <10>;
+		};
+
+		qcom,panel-supply-entry@1 {
+			reg = <1>;
+			qcom,supply-name = "wqhd-vddio";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <0>;
+		};
+	};
+};
+
+&dsi_rm67195_amoled_fhd_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_17021>;
+};
+
+&dsi_oppo16051samsung_s6e3fa3_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_17021>;
+};
+
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_17021>;
+};
+
+&dsi_oppo17021samsung_sofeg01_s_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_17021>;
+};
+
+&dsi_oppo17081samsung_ams596w401_1080_2280_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_17021>;
+};
+
+/* Panel PHY v2 timing overrides from the 17021 stock mdss panel table. */
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1b 08 0a 06 03 04 a0];
+};
+
+&dsi_oppo17021samsung_sofeg01_s_1080p_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1f 08 0a 06 03 04 a0
+		24 1b 08 0a 06 03 04 a0];
+};
+
+&dsi_oppo17081samsung_ams596w401_1080_2280_cmd {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [
+		20 20 09 0c 06 03 04 a0
+		20 20 09 0c 06 03 04 a0
+		20 20 09 0c 06 03 04 a0
+		20 20 09 0c 06 03 04 a0
+		20 20 09 0c 06 03 04 a0];
+};
+
+/* 17021 uses the regulator-powered AK4376 and MAX98927L amplifier. */
+&i2c_6 {
+	status = "okay";
+
+	ak4376@10 {
+		compatible = "akm,ak4376";
+		reg = <0x10>;
+		ak4376,reset-gpio = <&tlmm 76 0x00>;
+		ak4376-tvdd-supply = <&pm660_l14>;
+		ak4376-avdd-supply = <&pm660_l14>;
+		ak4376-tvdd-L8-supply = <&pm660_l8>;
+		ak4376-avdd-L8-supply = <&pm660_l8>;
+		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
+		status = "disabled";
+	};
+
+	max989xx@3a {
+		compatible = "maxim,max98927L", "maxim,max98927";
+		reg = <0x3a>;
+		interleave_mode = <0>;
+		vmon-slot-no = <0>;
+		imon-slot-no = <1>;
+		/* The 4.19 codec lacks OPPO reset/regulator and SDM660 machine-link
+		 * integration; leave it off until that driver work is completed. */
+		status = "disabled";
+	};
+};
+
+/* --- 触摸屏 synaptics17021@20 (synaptics-s3508, tx-rx 16x32, 1080x2160) --- */
+&i2c_1 {
+	status = "okay";
+	synaptics17021@20 {
+		compatible = "synaptics-s3508";
+		reg = <0x20>;
+
+		/* Interrupt && Irq-gpio */
+		interrupt-parent = <&tlmm>;
+		interrupts = <67 0x2008>;
+
+		/* Power Config */
+		vdd_2v8-supply = <&touchpanel_vdd>;
+		vcc_1v8-supply = <&pm660_l14>;
+
+		/* Other HW Resource */
+		irq-gpio = <&tlmm 67 0x2008>;
+		reset-gpio = <&tlmm 66 0x1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+
+		touchpanel,max-num-support = <10>;
+		touchpanel,tx-rx-num = <16 32>;
+		touchpanel,panel-coords = <1080 2160>;
+		touchpanel,display-coords = <1080 2160>;
+
+		/* SW Support Feature Control (spurious_fingerprint_support 源码注释掉) */
+		black_gesture_support;
+		edge_limit_support;
+		smart_gesture_support;
+
+		touchpanel,button-type = <4>;
+		touchpanel.button-TRx = <0 0>;
+	};
+};
+
+/* --- goodix 指纹 + devinfo（17021: goodix 启用；sub_hwid_1/2，无 RFver_gpio）--- */
+&hw_sub_gpio_active {
+	mux { pins = "gpio30", "gpio31"; };
+	config { pins = "gpio30", "gpio31"; };
+};
+
+&hw_sub_gpio_sleep {
+	mux { pins = "gpio30", "gpio31"; };
+	config { pins = "gpio30", "gpio31"; };
+};
+
+&soc {
+	goodix_fp {
+		compatible = "goodix,goodix_fp";
+		interrupt-parent = <&tlmm>;
+		interrupts = <72 0>;
+		goodix,gpio_irq = <&tlmm 72 0x1>;
+		goodix,gpio_reset = <&tlmm 20 0x0>;
+		ldo5-supply = <&pm660l_l5>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_goodix_irq_default>;
+	};
+
+	devinfo {
+		compatible = "oppo-devinfo";
+		Hw,sub_hwid_1 = <&tlmm 30 0x00>;
+		Hw,sub_hwid_2 = <&tlmm 31 0x00>;
+		pinctrl-names = "default", "hw_sub_gpio_sleep";
+		pinctrl-0 = <&hw_sub_gpio_active>;
+		pinctrl-1 = <&hw_sub_gpio_sleep>;
+	};
+};
+
+/* R11s Plus (17021) uses different primary QUSB2 board tuning. */
+&qusb_phy0 {
+	qcom,qusb-phy-init-seq = <0xf8 0x80
+				    0x83 0x84
+				    0x83 0x88
+				    0xc5 0x8c
+				    0x30 0x08
+				    0x79 0x0c
+				    0x21 0x10
+				    0x14 0x9c
+				    0x9f 0x1c
+				    0x00 0x18>;
+};
+
+#include "oppo-camera-17021.dtsi"

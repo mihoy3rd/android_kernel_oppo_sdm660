@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * OPPO SDM660 boot-contract and connector overrides.
+ *
+ * The Qualcomm 4.19 base describes an A/B Type-C reference board.  R11/R11s
+ * products are non-A/B USB2 boards, so keep these overrides separate from
+ * the peripheral nodes in oppo-sdm660-common.dtsi.  Connector type is not a
+ * DTS policy in 4.19: SMB2 reads EN_MICRO_USB_MODE_BIT from hardware.
+ */
+
+/* OPPO's partition layout is non-A/B and has no standalone vbmeta partition. */
+&{/firmware/android} {
+	/delete-node/ vbmeta;
+};
+
+&{/firmware/android/fstab/vendor} {
+	/* These non-A/B products do not generate legacy dm-verity metadata. */
+	fsmgr_flags = "wait";
+};
+
+/*
+ * Primary data path is USB2.  SMB2 supplies VBUS/ID notifications and detects
+ * the connector type itself; the SuperSpeed and CC/PD PHYs are not populated.
+ */
+&usb3 {
+	extcon = <&pm660_charger>;
+	vbus_dwc3-supply = <&smb2_vbus>;
+};
+
+&{/soc/ssusb@a800000/dwc3@a800000} {
+	usb-phy = <&qusb_phy0>, <&usb_nop_phy>;
+	maximum-speed = "high-speed";
+	/delete-property/ snps,usb3_lpm_capable;
+};
+
+&qusb_phy0 {
+	/* OPPO stock tuning for the R11/R11s micro-USB board routing. */
+	qcom,qusb-phy-init-seq = <0xb8 0x80
+				    0x8f 0x84
+				    0x83 0x88
+				    0xc7 0x8c
+				    0x30 0x08
+				    0x79 0x0c
+				    0x21 0x10
+				    0x14 0x9c
+				    0x9f 0x1c
+				    0x00 0x18>;
+};
+
+&ssphy {
+	status = "disabled";
+};
+
+&pm660_pdphy {
+	/* Disable the unwired CC/PD block, not connector auto-detection in SMB2. */
+	status = "disabled";
+};
+
+/* No DisplayPort mux exists; disabling it also releases GPIO55/GPIO56. */
+&mdss_dp_ctrl {
+	status = "disabled";
+};
