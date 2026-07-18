@@ -1,0 +1,35 @@
+/*
+ * SDM660 PM660A MTP - OPPO R11s (17011)
+ *
+ * 移植来源: oppo sdm660 4.4 内核 17011/sdm660-pm660a-mtp-17011.dts
+ * 目标内核: qcom sdm660 4.19
+ *
+ * qcom,board-id 第三段 (十进制 17011 = 0x4273) 是 OPPO 型号代号, bootloader
+ * 据此从 multi-dtb 选择匹配项。pmic-id 维持 oppo 原值 (3 组)。
+ *
+ * include 链: 入口 -> sdm660.dtsi/sdm660-mtp.dtsi/msm-pm660a.dtsi/sdm660-internal-codec.dtsi
+ *   (qcom 4.19 base) -> oppo/17011.dtsi (设备特有 + oppo/oppo-sdm660-common.dtsi 共性)。
+ *
+ * 板级硬件及 OPPO camera_v2 sensor/eeprom/flash 拓扑见 oppo/17011.dtsi；
+ * 触摸、指纹、VOOC 和外置音频等缺失的内核驱动不属于 DTS 入口职责。
+ *
+ * 验证范围: cpp+dtc 编译及静态 DTB 对比；msm-id/board-id/pmic-id 对齐
+ *   stock 最终 DTB，reserved-memory TZ=83M 对齐 stock。17011 另有现有 recovery 启动日志可供核对。
+ */
+
+/dts-v1/;
+
+#include "sdm660.dtsi"
+#include "sdm660-mtp.dtsi"
+#include "msm-pm660a.dtsi"
+#include "sdm660-internal-codec.dtsi"
+#include "oppo/17011.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. SDM 660 PM660 + PM660A MTP";
+	compatible = "qcom,sdm660-mtp", "qcom,sdm660", "qcom,mtp";
+	qcom,board-id = <8 0 17011>;
+	qcom,pmic-id = <0x0001001b 0x0001011a 0x0 0x0>,
+			<0x0001001b 0x0002001a 0x0 0x0>,
+			<0x0001001b 0x0202001a 0x0 0x0>;
+};

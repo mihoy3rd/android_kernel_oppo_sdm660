@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Replace the generic SDM660 MTP camera topology with the project-specific
+ * OPPO wiring.  Keep this in a separate include so every project starts from
+ * the same clean camera graph.
+ */
+
+/delete-node/ &led_flash0;
+/delete-node/ &led_flash1;
+/delete-node/ &cam_avdd_gpio_regulator;
+/delete-node/ &cam_actuator_regulator;
+/delete-node/ &cam_dvdd_gpio_regulator;
+/delete-node/ &cam_rear_dvdd_gpio_regulator;
+
+/delete-node/ &actuator0;
+/delete-node/ &actuator1;
+/delete-node/ &actuator2;
+/delete-node/ &ois0;
+/delete-node/ &tof0;
+/delete-node/ &eeprom0;
+/delete-node/ &eeprom1;
+/delete-node/ &eeprom2;
+
+&cci {
+	status = "okay";
+
+	/delete-node/ qcom,camera@0;
+	/delete-node/ qcom,camera@1;
+	/delete-node/ qcom,camera@2;
+	/delete-node/ qcom,camera@3;
+};
+
+/* The 4.4 QPNP GPIO child nodes used a binding that pinctrl-spmi-gpio no
+ * longer parses.  Apply the equivalent PM660L mux/VIN/output-low state from
+ * each camera consumer before its power sequence starts toggling the GPIO. */
+&pm660l_gpios {
+	oppo_cam_gpio3 {
+		oppo_cam_gpio3_default: oppo_cam_gpio3_default {
+			pins = "gpio3";
+			function = "normal";
+			power-source = <0>;
+			drive-push-pull;
+			output-low;
+			bias-disable;
+		};
+	};
+
+	oppo_cam_gpio4 {
+		oppo_cam_gpio4_default: oppo_cam_gpio4_default {
+			pins = "gpio4";
+			function = "normal";
+			power-source = <0>;
+			drive-push-pull;
+			output-low;
+			bias-disable;
+		};
+	};
+};
