@@ -1,0 +1,790 @@
+/*
+ * OPPO SDM660 R11/R11s 系列公共板级定制 (共性 overlay)
+ *
+ * 文件组织对齐 xiaomi/sony 的厂商子目录结构: vendor/qcom/oppo/。
+ *   入口 sdm660-pm660a-mtp-<代号>.dts  ->  #include "oppo/<代号>.dtsi"
+ *   oppo/<代号>.dtsi                    ->  #include "oppo-sdm660-common.dtsi" (本文件) + 设备特有
+ *
+ * 本文件承载所有 OPPO R11/R11s 设备 (16051/16103/16118/17011/17021) 共有的、
+ * 与 qcom 4.19 base 不同的 MTP 级配置 + reserved-memory 对齐 stock。
+ * 设备特有差异 (屏幕面板/触摸/VOOC/相机/devinfo GPIO 等) 放各 oppo/<代号>.dtsi。
+ *
+ * 移植约束: oppo(4.4)->qcom(4.19) 唯一方向, 共享 base dtsi 一律用 qcom 4.19 版,
+ * 此处仅 overlay 补充 (含 B0 reserved-memory 覆盖 reg, base 原文不动)。
+ */
+
+/* OPPO 量产面板表。五份 4.4 最终 DTB 的 prim-pan 均保持 rm67195
+ * 作启动兜底，bootloader 再按实际面板选择同存的 OPPO 节点。 */
+#include "../dsi-panel-oppo16051samsung_s6e3fa3_1080p_cmd.dtsi"
+#include "../dsi-panel-oppo16103jdi_r63452_1080p_cmd.dtsi"
+#include "../dsi-panel-oppo16118samsung_s6e3fa3_1080p_cmd.dtsi"
+#include "oppo-sdm660-platform.dtsi"
+
+/* OPPO uses the SDM660 internal-codec machine path and an external MI2S amp. */
+&int_codec {
+	qcom,model = "sdm660-snd-card-mtp";
+	qcom,wsa-disable;
+	qcom,msm-mi2s-master = <0>, <1>, <0>, <0>, <0>;
+	qcom,msm-mi2s-ext-mclk = <1>, <0>, <0>, <0>, <0>;
+	qcom,msm-mbhc-gnd-swh = <0>;
+	qcom,msm-micbias1-ext-cap;
+};
+
+&mdss_dsi {
+	hw-config = "single_dsi";
+};
+
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_rm67195_amoled_fhd_cmd>;
+	pinctrl-names = "mdss_default", "mdss_sleep";
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
+			&mdss_exits_active &mdss_err_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend
+			&mdss_exits_suspend &mdss_err_suspend>;
+	oledb-supply = <&pm660a_oledb>;
+	lab-supply = <&lab_regulator>;
+	ibb-supply = <&ibb_regulator>;
+	/* 16103/16118 alternate panels use the stock vddio/oled-vdda names. */
+	vddio-supply = <&pm660l_l6>;
+	oled-vdda-supply = <&pm660_l14>;
+};
+
+&mdss_dsi1 {
+	status = "disabled";
+	oledb-supply = <&pm660a_oledb>;
+	lab-supply = <&lab_regulator>;
+	ibb-supply = <&ibb_regulator>;
+};
+
+/* AMOLED panels use the 1.8 V I/O and 3.0 V rails from the stock OPPO table. */
+&dsi_rm67195_amoled_fhd_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_amoled>;
+};
+
+&dsi_oppo16051samsung_s6e3fa3_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_amoled>;
+};
+
+&dsi_oppo16103jdi_r63452_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_161xx>;
+};
+
+&dsi_oppo16118samsung_s6e3fa3_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_161xx>;
+};
+
+&dsi_oppo17011samsung_sofeg01_s_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_amoled>;
+};
+
+&dsi_oppo17021samsung_sofeg01_s_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_amoled>;
+};
+
+&tavil_snd {
+	qcom,msm-mbhc-moist-cfg = <0>, <0>, <3>;
+};
+
+/* The Qualcomm WSA881x reference path shares GPIO24-27 with OPPO's external
+ * secondary-MI2S amplifier.  Keep its SoundWire consumers off as well as
+ * setting qcom,wsa-disable on the active machine node above. */
+&cdc_sdw_gpios {
+	status = "disabled";
+};
+
+&wsa_spkr_en1 {
+	status = "disabled";
+};
+
+&wsa_spkr_en2 {
+	status = "disabled";
+};
+
+&msm_sdw_codec {
+	status = "disabled";
+};
+
+/* ========================================================================
+ * B0: reserved-memory 对齐 stock R11s（启动关键 ★★★，第二步阶段 0）
+ *
+ * oppo 沿用 stock tz/adsp/cdsp/modem 闭源 firmware，其内存需求 = stock dtb
+ * 声明。stock TZ=83M(@85800000-@8ab00000)，而 4.19 默认仅 55M —— 若不改，
+ * 内核会把 @88f00000-@8ab00000 当可用 RAM 分配，覆盖 bootloader 已加载的
+ * TZ firmware 而崩溃。
+ *
+ * 对齐策略：保留 4.19 的 smem_mem@8600 结构（/soc/qcom,smem 的
+ * memory-region=<&smem_mem> 依赖它，sdm660.dtsi:1737），不动 removed_regions
+ * @8580(8M) 与 smem_mem@8600(2M)，把 removed_regions1 从 45M 扩到 73M
+ * (@8620->@8ab0)，使 TZ 区 @85800000-@8ab00000 全覆盖 = stock 83M。
+ *
+ * 对齐后内存图（连续、无重叠）：
+ *   @8580-8600 removed_regions(8M) | @8600-8620 smem_mem(2M) | @8620-8ab0 removed_regions1(73M)=TZ 83M
+ *   qseecom secapp-region: @86d0-8ab0 (62M，位于上述 TZ 区内)
+ *   @8ac0-92a0 modem_fw(126M) | @92a0-94a0 adsp(32M) | @94a0-94c0 pil_mba(2M) | @94c0-9520 cdsp(6M)
+ *   @9d40-9f80 splash(0x2400000)
+ *
+ * 不动（保留 4.19）：removed_regions@8580(8M)、smem_mem@8600、modem_fw、wlan、
+ *   dfps_data_mem(4.19 mdss-pll 引用)、shared-dma-pool(stock 与 4.19 size 一致)。
+ * 参考：小米 4.4 TZ 仅 55M 才能用 4.19 默认；oppo 83M 必须对齐 stock。
+ * ======================================================================== */
+&removed_regions1 {	/* 45M(0x2d00000) -> 73M(0x4900000): 补 TZ 至 83M */
+	reg = <0x0 0x86200000 0x0 0x4900000>;
+};
+
+&adsp_fw_mem {		/* 30M(0x1e00000) -> 32M(0x2000000) */
+	reg = <0x0 0x92a00000 0x0 0x2000000>;
+};
+
+&pil_mba_mem {		/* @94800000 -> @94a00000（adsp +2M 后整体后移）*/
+	reg = <0x0 0x94a00000 0x0 0x200000>;
+};
+
+&cdsp_fw_mem {		/* @94a00000 -> @94c00000 */
+	reg = <0x0 0x94c00000 0x0 0x600000>;
+};
+
+&cont_splash_mem {	/* 0x23ff000 -> 0x2400000（对齐 stock）*/
+	reg = <0x0 0x9d400000 0x0 0x2400000>;
+};
+
+/* qseecom sends this resource to the running stock TZ through SCM.  Keep its
+ * end aligned with the enlarged TZ reservation, rather than the 4.19 MTP
+ * default that stops at @88f00000. */
+&qcom_seecom {
+	reg = <0x86d00000 0x03e00000>;
+	/* OPPO's stock TZ/Keymaster contract uses 16-byte FDE keys. */
+	/delete-property/ qcom,fde-key-size;
+};
+
+/* Retain the stock 10 s pet period with OPPO's 20 s bark margin. */
+&wdog {
+	qcom,bark-time = <20000>;
+};
+
+/* ========================================================================
+ * 启动洁净: disable 4.19 base 残留外设 (stock 4.4 实际产物里没有)
+ * 这些是 qcom MTP 参考设计节点, OPPO R11/R11s 硬件不存在; 若不 disable,
+ * 其驱动 probe 会抢占 oppo 外设 GPIO:
+ *   qbt1000 (指纹传输)        -> gpio72, 与 fpc/goodix 指纹竞争
+ *   tof0    (ST VL53L0 激光对焦) -> gpio42/45/50
+ * stock idx1 (oppo 4.4 真实产物) 反编译确认无此二节点。
+ * ======================================================================== */
+&{/soc/qcom,qbt1000} {
+	status = "disabled";
+};
+
+&tof0 {
+	status = "disabled";
+};
+
+/* The MTP parallel SMB1351 is not fitted on these VOOC boards. */
+&i2c_2 {
+	/* All five stock projects enable BLSP1 QUP2 for VOOC/gauge devices. */
+	status = "okay";
+
+	smb1351-charger@1d {
+		status = "disabled";
+	};
+};
+
+/* The currently verified OPPO SKUs boot from eMMC.  Keep the unused UFS host,
+ * PHY and its separately-probed ICE device off to avoid no-device probing and
+ * rail activity.  eMMC uses sdcc1_ice; a confirmed UFS SKU should enable all
+ * three UFS nodes in its own product overlay. */
+&ufs1 {
+	status = "disabled";
+};
+
+&ufsphy1 {
+	status = "disabled";
+};
+
+&ufs_ice {
+	status = "disabled";
+};
+
+/* nq@28 is inherited from the Qualcomm MTP reference design, not fitted on
+ * the OPPO production boards.  Its FIRM/eSE lines also overlap OPPO's
+ * GPIO30/31 hardware-ID straps, so do not let the enabled 4.19 NQ driver
+ * claim those pins. */
+&i2c_6 {
+	nq@28 {
+		status = "disabled";
+	};
+};
+
+/* ========================================================================
+ * 阶段1: 共性硬件 overlay（5 设备一致）
+ * ======================================================================== */
+
+/* The 4.19 msm_serial driver only receives the generic default pinctrl state.
+ * OPPO 4.4's private "disable" state was selected by boot_with_console(), a
+ * policy hook that no longer exists in this tree. */
+&uartblsp1dm1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart_console_active>;
+};
+
+/* --- 按键 vol_up/down: oppo 用 pm660l GPIO8/5（4.19 base 默认 GPIO7 only）--- */
+&pm660l_gpios {
+	key_vol_up {
+		key_vol_up_default {
+			pins = "gpio8";	/* 覆盖 base gpio7 -> gpio8（oppo 硬件 vol_up）*/
+		};
+	};
+	key_vol_down {
+		key_vol_down_default: key_vol_down_default {
+			pins = "gpio5";
+			function = "normal";
+			input-enable;
+			bias-pull-up;
+			power-source = <0>;
+		};
+	};
+};
+
+/* OPPO only wires PM660L RGB sinks 1/2.  Keep the 4.19 tri-led binding but
+ * expose the stock LED class names and do not blink them at probe time. */
+&pm660l_rgb_led {
+	/delete-node/ red;
+
+	green {
+		label = "button-backlight";
+		/delete-property/ linux,default-trigger;
+	};
+
+	blue {
+		label = "white";
+		/delete-property/ linux,default-trigger;
+	};
+};
+
+/* Preserve the stock PMIC contracts using the 4.19 driver bindings.
+ * The stock qcom,qpnp-rtc-write = <0> maps to the absence of
+ * allow-set-time, so do not add that 4.19 boolean here. */
+&pm660_pon {
+	qcom,clear-warm-reset;
+};
+
+/* All five stock projects (16051/16103/16118/17011/17021) drive an ERM motor.
+ * Use the qpnp-haptic driver instead of qti-haptics, matching the stock
+ * msm-pm660.dtsi node plus the sdm660-qrd.dtsi overlay (vmax-mv = 1800,
+ * wave-play-rate-us = 4255). */
+&spmi_bus {
+	qcom,pm660@1 {
+		/delete-node/ qcom,haptic@c000;
+		pm660_haptics: qcom,haptic@c000 {
+			compatible = "qcom,qpnp-haptic";
+			reg = <0xc000 0x100>;
+			interrupts = <0x1 0xc0 0x0 IRQ_TYPE_EDGE_BOTH>,
+				     <0x1 0xc0 0x1 IRQ_TYPE_EDGE_BOTH>;
+			interrupt-names = "sc-irq", "play-irq";
+			qcom,pmic-revid = <&pm660_revid>;
+			qcom,pmic-misc = <&pm660_misc>;
+			qcom,misc-clk-trim-error-reg = <0xf3>;
+			qcom,actuator-type = "erm";
+			qcom,play-mode = "direct";
+			qcom,vmax-mv = <1800>;
+			qcom,ilim-ma = <800>;
+			qcom,wave-shape = "square";
+			qcom,wave-play-rate-us = <4255>;
+			qcom,int-pwm-freq-khz = <505>;
+			qcom,sc-deb-cycles = <8>;
+			qcom,brake-pattern = [03 03 00 00];
+			qcom,lra-high-z = "opt0";
+			qcom,lra-auto-res-mode = "qwd";
+			qcom,lra-calibrate-at-eop = <0>;
+			qcom,correct-lra-drive-freq;
+			qcom,vib-timemin-ms = <35>;
+		};
+	};
+};
+
+/* 180 mA is the stock upper torch current shared by every project.  The
+ * three smaller variants further lower sinks 0/1 in their project overlays. */
+&pm660l_torch0 {
+	qcom,current-ma = <180>;
+};
+
+&pm660l_torch1 {
+	qcom,current-ma = <180>;
+};
+
+&pm660l_torch2 {
+	qcom,current-ma = <180>;
+};
+
+&soc {
+	oppo_dsi_panel_pwr_supply_amoled: oppo_dsi_panel_pwr_supply_amoled {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		qcom,panel-supply-entry@0 {
+			reg = <0>;
+			qcom,supply-name = "wqhd-vddio";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <32000>;
+			qcom,supply-disable-load = <80>;
+		};
+
+		qcom,panel-supply-entry@1 {
+			reg = <1>;
+			qcom,supply-name = "vdda-3p3";
+			qcom,supply-min-voltage = <3000000>;
+			qcom,supply-max-voltage = <3000000>;
+			qcom,supply-enable-load = <13200>;
+			qcom,supply-disable-load = <80>;
+		};
+	};
+
+	/* 16103/16118 stock panels have a different two-rail power contract. */
+	oppo_dsi_panel_pwr_supply_161xx: oppo_dsi_panel_pwr_supply_161xx {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		qcom,panel-supply-entry@0 {
+			reg = <0>;
+			qcom,supply-name = "vddio";
+			qcom,supply-min-voltage = <3100000>;
+			qcom,supply-max-voltage = <3100000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <80>;
+		};
+
+		qcom,panel-supply-entry@1 {
+			reg = <1>;
+			qcom,supply-name = "oled-vdda";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <0>;
+		};
+	};
+
+	gpio_keys {
+		/* 4.19 标准 pinctrl: "default" 同时 mux vol_up+vol_down (PMIC gpio8/5).
+		 * 4.4 私有的 tlmm_gpio_key_active/suspend 实为 gpio64/113 相机键 mux;
+		 * 标准 gpio-keys 只 apply "default" state, 旧命名致 vol_up 不被 mux.
+		 * base 残留的 camera_focus/snapshot 子节点见下方 /delete-node/ */
+		pinctrl-names = "default";
+		pinctrl-0 = <&key_vol_up_default &key_vol_down_default>;
+		/delete-property/ pinctrl-1;
+		/* 删 base 残留相机按键 (stock 已清理; gpio64/113 oppo 闲置)。
+		 * /delete-node/ 须置于 properties 之后 (dtc 视其为 subnode 区起点) */
+		/delete-node/ camera_focus;
+		/delete-node/ camera_snapshot;
+		vol_up {
+			gpios = <&pm660l_gpios 8 0x1>;	/* base gpio7 -> gpio8 */
+		};
+		vol_down {
+			label = "volume_down";
+			gpios = <&pm660l_gpios 5 0x1>;
+			linux,input-type = <1>;
+			linux,code = <114>;
+			gpio-key,wakeup;
+			debounce-interval = <15>;
+		};
+	};
+
+	/* oppo 新增 regulator-fixed（4.19 base 无；来源 oppo sdm660-regulator.dtsi）*/
+	sdhc2_vdd_vreg: sdhc2_vdd_vreg {
+		compatible = "regulator-fixed";
+		regulator-name = "sdhc2_vdd_vreg";
+		startup-delay-us = <0>;
+		enable-active-high;
+		gpio = <&tlmm 52 0>;
+	};
+	touchpanel_vdd: touchpanel_vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "touchpanel_vdd";
+		startup-delay-us = <0>;
+		enable-active-high;
+		gpio = <&tlmm 15 0>;
+	};
+};
+
+/* --- sdhc2 (SD 卡) 用 GPIO 3V 供电 + SIM 卡检测 pinctrl（oppo）--- */
+&sdhc_2 {
+	vdd-supply = <&sdhc2_vdd_vreg>;
+	cd-gpios = <&tlmm 54 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default", "active", "sleep";
+	pinctrl-0 = <&sdc2_cd_on &sim1_cd_on &sim2_cd_on>;
+	pinctrl-1 = <&sdc2_clk_on &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
+	pinctrl-2 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+};
+
+/* OPPO's production eMMC routing was signal-integrity tuned below the MTP
+ * reference value; all five stock project DTBs use 10 mA for SDC1 CLK. */
+&sdc1_clk_on {
+	config {
+		drive-strength = <10>;
+	};
+};
+
+/* ========================================================================
+ * pinctrl 共性 group（&tlmm，来源 oppo 4.4 sdm660-pinctrl.dtsi）
+ * 语法已是 4.19 TLMM 通用（pins/function/drive-strength/bias），直接搬入。
+ * 设备特有 group 放各 oppo/<代号>.dtsi。
+ * ======================================================================== */
+&tlmm {
+	/* R11s panel exit/error inputs and 1.8 V POC enable. */
+	mdss_exits_active: mdss_exits_active {
+		mux { pins = "gpio73"; function = "gpio"; };
+		config {
+			pins = "gpio73";
+			drive-strength = <2>;
+			bias-disable;
+			input-enable;
+		};
+	};
+	mdss_exits_suspend: mdss_exits_suspend {
+		mux { pins = "gpio73"; function = "gpio"; };
+		config {
+			pins = "gpio73";
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
+	mdss_err_active: mdss_err_active {
+		mux { pins = "gpio56"; function = "gpio"; };
+		config {
+			pins = "gpio56";
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
+	mdss_err_suspend: mdss_err_suspend {
+		mux { pins = "gpio56"; function = "gpio"; };
+		config {
+			pins = "gpio56";
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
+	mdss_poc_1p8_active: mdss_poc_1p8_active {
+		mux { pins = "gpio63"; function = "gpio"; };
+		config {
+			pins = "gpio63";
+			drive-strength = <2>;
+			bias-pull-up;
+			output-high;
+		};
+	};
+	mdss_poc_1p8_suspend: mdss_poc_1p8_suspend {
+		mux { pins = "gpio63"; function = "gpio"; };
+		config {
+			pins = "gpio63";
+			drive-strength = <2>;
+			bias-disable;
+			output-low;
+		};
+	};
+
+	/* 指纹模组 ID 检测（oppo_fp_common 引用）*/
+	oppo_fp_common {
+		gpio_id1_default: gpio_id1_default {
+			mux { pins = "gpio62"; function = "gpio"; };
+			config { pins = "gpio62"; drive-strength = <2>; bias-pull-up; input-enable; };
+		};
+		gpio_id2_default: gpio_id2_default {
+			mux { pins = "gpio74"; function = "gpio"; };
+			config { pins = "gpio74"; drive-strength = <2>; bias-pull-up; input-enable; };
+		};
+		gpio_id3_default: gpio_id3_default {
+			mux { pins = "gpio77"; function = "gpio"; };
+			config { pins = "gpio77"; drive-strength = <2>; bias-pull-up; input-enable; };
+		};
+	};
+
+	/* fpc 指纹（fpc_fpc1020 引用）*/
+	fpc_fpc1020 {
+		gpio_vdd_en_default: gpio_vdd_en_default {
+			mux { pins = "gpio40"; function = "gpio"; };
+			config { pins = "gpio40"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		gpio_fpc_irq_default: gpio_fpc_irq_default {
+			mux { pins = "gpio72"; function = "gpio"; };
+			config { pins = "gpio72"; drive-strength = <2>; bias-pull-up; input-enable; };
+		};
+	};
+
+	/* goodix 指纹中断（5 设备 pinctrl 都有；goodix_fp 节点按设备启用）*/
+	goodix_fp {
+		gpio_goodix_irq_default: gpio_goodix_irq_default {
+			mux { pins = "gpio72"; function = "gpio"; };
+			config { pins = "gpio72"; drive-strength = <2>; bias-disable; input-enable; };
+		};
+	};
+
+	/* HW_ID 子板识别：前三个项目仅 GPIO30；17011/17021 在型号层追加 GPIO31。 */
+	hw_sub_gpio_active: hw_sub_gpio_active {
+		mux { pins = "gpio30"; function = "gpio"; };
+		config { pins = "gpio30"; drive-strength = <2>; bias-pull-up; };
+	};
+	hw_sub_gpio_sleep: hw_sub_gpio_sleep {
+		mux { pins = "gpio30"; function = "gpio"; };
+		config { pins = "gpio30"; drive-strength = <2>; bias-pull-down; };
+	};
+
+	/* 触摸屏中断/复位（5 设备共性；4.19 base 仅有 ts_int_suspend）*/
+	ts_int_active: ts_int_active {
+		mux { pins = "gpio67"; function = "gpio"; };
+		config { pins = "gpio67"; drive-strength = <8>; bias-pull-up; };
+	};
+	ts_reset_active: ts_reset_active {
+		mux { pins = "gpio66"; function = "gpio"; };
+		config { pins = "gpio66"; drive-strength = <8>; bias-disable; };
+	};
+
+	/* 音频 MI2S（外挂功放 ak4376/tfa98xx）*/
+	pri_mi2s_mclk {
+		pri_mi2s_mclk_sleep: pri_mi2s_mclk_sleep {
+			mux { pins = "gpio61"; function = "pri_mi2s"; };
+			config { pins = "gpio61"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		pri_mi2s_mclk_active: pri_mi2s_mclk_active {
+			mux { pins = "gpio61"; function = "pri_mi2s"; };
+			config { pins = "gpio61"; drive-strength = <8>; bias-disable; output-high; };
+		};
+	};
+	pri_mi2s {
+		pri_mi2s_sleep: pri_mi2s_sleep {
+			mux { pins = "gpio12"; function = "pri_mi2s"; };
+			config { pins = "gpio12"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		pri_mi2s_active: pri_mi2s_active {
+			mux { pins = "gpio12"; function = "pri_mi2s"; };
+			config { pins = "gpio12"; drive-strength = <8>; bias-disable; output-high; };
+		};
+	};
+	pri_mi2s_ws {
+		pri_mi2s_ws_sleep: pri_mi2s_ws_sleep {
+			mux { pins = "gpio13"; function = "pri_mi2s_ws"; };
+			config { pins = "gpio13"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		pri_mi2s_ws_active: pri_mi2s_ws_active {
+			mux { pins = "gpio13"; function = "pri_mi2s_ws"; };
+			config { pins = "gpio13"; drive-strength = <8>; bias-disable; output-high; };
+		};
+	};
+	pri_mi2s_sd0 {
+		pri_mi2s_sd0_sleep: pri_mi2s_sd0_sleep {
+			mux { pins = "gpio14"; function = "pri_mi2s"; };
+			config { pins = "gpio14"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		pri_mi2s_sd0_active: pri_mi2s_sd0_active {
+			mux { pins = "gpio14"; function = "pri_mi2s"; };
+			config { pins = "gpio14"; drive-strength = <8>; bias-disable; output-high; };
+		};
+	};
+	sec_mi2s {
+		sec_mi2s_sleep: sec_mi2s_sleep {
+			mux { pins = "gpio24", "gpio25"; function = "sec_mi2s"; };
+			config { pins = "gpio24", "gpio25"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		sec_mi2s_active: sec_mi2s_active {
+			mux { pins = "gpio24", "gpio25"; function = "sec_mi2s"; };
+			config { pins = "gpio24", "gpio25"; drive-strength = <8>; output-high; };
+		};
+	};
+	sec_mi2s_sd0 {
+		sec_mi2s_sd0_sleep: sec_mi2s_sd0_sleep {
+			mux { pins = "gpio26"; function = "sec_mi2s"; };
+			config { pins = "gpio26"; drive-strength = <2>; bias-pull-down; input-enable; };
+		};
+		sec_mi2s_sd0_active: sec_mi2s_sd0_active {
+			mux { pins = "gpio26"; function = "sec_mi2s"; };
+			config { pins = "gpio26"; drive-strength = <8>; input-enable; };
+		};
+	};
+	sec_mi2s_sd1 {
+		sec_mi2s_sd1_sleep: sec_mi2s_sd1_sleep {
+			mux { pins = "gpio27"; function = "sec_mi2s"; };
+			config { pins = "gpio27"; drive-strength = <2>; bias-pull-down; output-low; };
+		};
+		sec_mi2s_sd1_active: sec_mi2s_sd1_active {
+			mux { pins = "gpio27"; function = "sec_mi2s"; };
+			config { pins = "gpio27"; drive-strength = <8>; output-high; };
+		};
+	};
+
+	/* SIM 卡检测 */
+	sim1_cd_on: sim1_cd_on {
+		mux { pins = "gpio90"; function = "gpio"; };
+		config { pins = "gpio90"; bias-pull-up; drive-strength = <2>; };
+	};
+	sim1_cd_off: sim1_cd_off {
+		mux { pins = "gpio90"; function = "gpio"; };
+		config { pins = "gpio90"; bias-pull-up; drive-strength = <2>; };
+	};
+	sim2_cd_on: sim2_cd_on {
+		mux { pins = "gpio86"; function = "gpio"; };
+		config { pins = "gpio86"; bias-pull-up; drive-strength = <2>; };
+	};
+	sim2_cd_off: sim2_cd_off {
+		mux { pins = "gpio86"; function = "gpio"; };
+		config { pins = "gpio86"; bias-pull-up; drive-strength = <2>; };
+	};
+
+	/* 副摄 actuator 供电（第二路 AF）*/
+	cam_actuator_vaf2_active: cam_actuator_vaf2_active {
+		mux { pins = "gpio0"; function = "gpio"; };
+		config { pins = "gpio0"; bias-disable; drive-strength = <2>; };
+	};
+	cam_actuator_vaf2_suspend: cam_actuator_vaf2_suspend {
+		mux { pins = "gpio0"; function = "gpio"; };
+		config { pins = "gpio0"; bias-pull-down; drive-strength = <2>; };
+	};
+
+	/* 充电 / VOOC 快充 GPIO（stm8s_fastcg/pic16f_fastcg 引用）*/
+	charger {
+		charging_switch1_active: charging_switch1_active {
+			mux { pins = "gpio75"; function = "gpio"; };
+			config { pins = "gpio75"; drive-strength = <2>; bias-pull-up; };
+		};
+		charging_switch1_sleep: charging_switch1_sleep {
+			mux { pins = "gpio75"; function = "gpio"; };
+			config { pins = "gpio75"; drive-strength = <2>; bias-pull-down; };
+		};
+		charging_reset_active: charging_reset_active {
+			mux { pins = "gpio55"; function = "gpio"; };
+			config { pins = "gpio55"; drive-strength = <2>; bias-pull-up; };
+		};
+		charging_reset_sleep: charging_reset_sleep {
+			mux { pins = "gpio55"; function = "gpio"; };
+			config { pins = "gpio55"; drive-strength = <2>; bias-pull-down; };
+		};
+		charging_clock_active: charging_clock_active {
+			mux { pins = "gpio51"; function = "gpio"; };
+			config { pins = "gpio51"; drive-strength = <2>; bias-pull-up; };
+		};
+		charging_clock_sleep: charging_clock_sleep {
+			mux { pins = "gpio51"; function = "gpio"; };
+			config { pins = "gpio51"; drive-strength = <2>; bias-pull-down; };
+		};
+		charging_data_active: charging_data_active {
+			mux { pins = "gpio44"; function = "gpio"; };
+			config { pins = "gpio44"; drive-strength = <2>; bias-pull-up; };
+		};
+		charging_data_sleep: charging_data_sleep {
+			mux { pins = "gpio44"; function = "gpio"; };
+			config { pins = "gpio44"; drive-strength = <2>; bias-pull-down; };
+		};
+	};
+};
+
+/* --- 共性外设节点（&soc）：指纹 oppo_fp_common / fpc_fpc1020 --- */
+&soc {
+	oppo_fp_common {
+		compatible = "oppo,fp_common";
+		oppo,fp-id1 = <&tlmm 62 0x00>;
+		oppo,fp-id2 = <&tlmm 74 0x00>;
+		oppo,fp-id3 = <&tlmm 77 0x00>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_id1_default &gpio_id2_default &gpio_id3_default>;
+	};
+	oppo_secure_common {
+		compatible = "oppo,secure_common";
+	};
+	fpc_fpc1020 {
+		compatible = "fpc,fpc1020";
+		/* The 4.19 driver attached to this compatible requires a reset GPIO
+		 * and three named states.  GPIO40 is the stock power-enable line, not
+		 * a reset signal; keep the hardware description but prevent a probe
+		 * with the incompatible 4.4 binding. */
+		status = "disabled";
+		fpc,irq-gpio = <&tlmm 72 0x00>;
+		fpc,vdd_en = <&tlmm 40 0x00>;
+		vdd_io-supply = <&pm660_l13>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_vdd_en_default &gpio_fpc_irq_default>;
+	};
+};
+
+/* --- i2c_1 (触摸屏总线): 禁用 DMA (启动关键) ---
+ * 4.19 i2c-msm-v2 驱动对触摸屏 video_mode 内存做 DMA 映射会 panic (Xiaomi longcheer
+ * 同款 SDM660 已验证: LineageOS/android_kernel_xiaomi_sdm660 commit 2c6ce41)。
+ * 5 设备触摸屏均在 i2c_1, 共性禁用。当前 4.19 内核尚未编入 OPPO synaptics-s3508
+ * 驱动 (synaptics_dsx 的 compatible "synaptics,dsx-i2c" 不匹配 s3508), 暂不触发;
+ * 一旦移植 S3508 触摸驱动则必需此属性, 否则触摸 probe 时 kernel panic -> 卡 OEM Logo。
+ * 驱动: drivers/i2c/busses/i2c-msm-v2.c, "qcom,disable-dma" -> BLOCK 传输模式。 */
+&i2c_1 {
+	qcom,disable-dma;
+};
+
+/* The stock audio routing is identical across all five projects.  The 4.19
+ * defaults describe the Qualcomm reference board and leave the OPPO pinctrl
+ * groups unused, so restore both the line masks and their active/sleep states. */
+&dai_mi2s0 {
+	qcom,msm-mi2s-rx-lines = <1>;
+	qcom,msm-mi2s-tx-lines = <0>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&pri_mi2s_active
+			&pri_mi2s_mclk_active
+			&pri_mi2s_ws_active
+			&pri_mi2s_sd0_active>;
+	pinctrl-1 = <&pri_mi2s_sleep
+			&pri_mi2s_mclk_sleep
+			&pri_mi2s_ws_sleep
+			&pri_mi2s_sd0_sleep>;
+};
+
+&dai_mi2s1 {
+	qcom,msm-mi2s-rx-lines = <1>;
+	qcom,msm-mi2s-tx-lines = <2>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sec_mi2s_active
+			&sec_mi2s_sd0_active
+			&sec_mi2s_sd1_active>;
+	pinctrl-1 = <&sec_mi2s_sleep
+			&sec_mi2s_sd0_sleep
+			&sec_mi2s_sd1_sleep>;
+};
+
+/* External codec/amp types differ by project; children live in each variant. */
+&i2c_6 {
+	status = "okay";
+};
+
+/* ========================================================================
+ * 相机 pinctrl pin 重新分配（oppo 改动，解除与 VOOC 的 gpio44/51/50 冲突）
+ *
+ * 4.19 base 的 cam_sensor_rear 用 gpio44、rear2 用 gpio51、actuator_vaf 用 gpio50，
+ * 与 oppo VOOC(charging_data gpio44 / charging_clock gpio51) 冲突。OPPO 相机图会
+ * probe 这些 mux，故先恢复量产板分配（源码注释 "sjc delete for charging"）。
+ * 这里是 16051/17011/17021 的公共组；16103/16118 在型号 overlay 追加其额外 GPIO。
+ * cam_actuator_vaf2(gpio0) 已在 &tlmm 共性段。
+ * ======================================================================== */
+&cam_actuator_vaf_active {
+	mux { pins = "gpio1"; };
+	config { pins = "gpio1"; bias-disable; drive-strength = <2>; };
+};
+&cam_actuator_vaf_suspend {
+	mux { pins = "gpio1"; };
+	config { pins = "gpio1"; bias-pull-down; drive-strength = <2>; };
+};
+&cam_sensor_rear_active {
+	mux { pins = "gpio48"; };
+	config { pins = "gpio48"; bias-disable; drive-strength = <2>; };
+};
+&cam_sensor_rear_suspend {
+	mux { pins = "gpio48"; };
+	config { pins = "gpio48"; bias-disable; drive-strength = <2>; };
+};
+&cam_sensor_rear2_active {
+	mux { pins = "gpio46"; };
+	config { pins = "gpio46"; bias-disable; drive-strength = <2>; };
+};
+&cam_sensor_rear2_suspend {
+	mux { pins = "gpio46"; };
+	config { pins = "gpio46"; bias-disable; drive-strength = <2>; };
+};
+&cam_sensor_front_active {
+	mux { pins = "gpio47"; };
+	config { pins = "gpio47"; bias-disable; drive-strength = <2>; };
+};
