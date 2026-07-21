@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0
+config OPPO_DEVICE_INFO
+	bool "config oppo devinfo software"
+	depends on OPPO_COMMON_SOFT
+	depends on OF && GPIOLIB && PINCTRL
+	help
+	  define this config to compile devinfo.c for device register
