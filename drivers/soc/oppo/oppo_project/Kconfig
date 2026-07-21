@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0
+config OPPO_COMMON_SOFT
+	bool "config oppo common software"
+	depends on ARCH_SDM660
+	depends on QCOM_SMEM=y
+	depends on PROC_FS && SYSFS
+	select OPPO_ARCH_FILE
+	help
+	  define this config to get project version from sharemem.
+	  Maybe this value is from CDT or dynamic identify by hardware
+	  id.
