@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0
+config OPPO_ARCH_FILE
+	bool "for build directory oppo"
+	---help---
+	say Y to build in
+
+source "drivers/soc/oppo/oppo_project/Kconfig"
+
+source "drivers/soc/oppo/oppo_devinfo/Kconfig"
