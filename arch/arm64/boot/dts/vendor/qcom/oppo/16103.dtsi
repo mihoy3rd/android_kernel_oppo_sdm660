@@ -28,17 +28,19 @@
 	oppo,speaker-pa = "maxim";
 };
 
-/* 16103 LCD has no POC GPIO state and uses the PMIC +/-5 V enables. */
+/* 16103 LCD has no POC GPIO state and uses fixed regulators for +/-5 V. */
 &mdss_dsi0 {
 	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
 			&mdss_exits_active &mdss_err_active>;
 	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend
 			&mdss_exits_suspend &mdss_err_suspend>;
-	qcom,platform-enable-gpio = <&pm660_gpios 3 0>;
-	qcom,platform-bklight-en-gpio = <&pm660_gpios 11 0>;
+	lcd-vsp-supply = <&lcd_vsp_16103>;
+	lcd-vsn-supply = <&lcd_vsn_16103>;
 };
 
-/* These alternate AMOLED panels retain the stock five-rail LAB/IBB table. */
+/*
+ * These alternate AMOLED panels retain the stock five-rail LAB/IBB table.
+ */
 &dsi_rm67195_amoled_fhd_cmd {
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply_labibb_amoled>;
 };
@@ -51,14 +53,92 @@
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply_labibb_amoled>;
 };
 
-/* The production JDI panel uses the two-LDO table above.  Match the stock
- * final DTB and keep the PMIC display boost blocks off on this project. */
+/*
+ * The production JDI panel uses two LDOs and the GPIO bias rails below.
+ * Match the stock final DTB and keep the PMIC display boost blocks off.
+ */
 &pm660a_oledb {
 	status = "disabled";
 };
 
 &pm660a_labibb {
 	status = "disabled";
+};
+
+&pm660l_wled {
+	status = "disabled";
+};
+
+&soc {
+	/*
+	 * Keep the bootloader-enabled bias rails asserted while the fixed
+	 * regulator providers bind; MDSS can still switch them afterwards.
+	 */
+	lcd_vsp_16103: regulator-lcd-vsp-16103 {
+		compatible = "regulator-fixed";
+		regulator-name = "lcd_vsp_16103";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&pm660_gpios 3 0>;
+	};
+
+	lcd_vsn_16103: regulator-lcd-vsn-16103 {
+		compatible = "regulator-fixed";
+		regulator-name = "lcd_vsn_16103";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-boot-on;
+		enable-active-high;
+		gpio = <&pm660_gpios 11 0>;
+	};
+
+	oppo_dsi_panel_pwr_supply_16103: oppo_dsi_panel_pwr_supply_16103 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		qcom,panel-supply-entry@0 {
+			reg = <0>;
+			qcom,supply-name = "vddio";
+			qcom,supply-min-voltage = <3100000>;
+			qcom,supply-max-voltage = <3100000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <80>;
+		};
+
+		qcom,panel-supply-entry@1 {
+			reg = <1>;
+			qcom,supply-name = "oled-vdda";
+			qcom,supply-min-voltage = <1800000>;
+			qcom,supply-max-voltage = <1800000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <0>;
+		};
+
+		qcom,panel-supply-entry@2 {
+			reg = <2>;
+			qcom,supply-name = "lcd-vsp";
+			qcom,supply-min-voltage = <5000000>;
+			qcom,supply-max-voltage = <5000000>;
+			qcom,supply-enable-load = <0>;
+			qcom,supply-disable-load = <0>;
+			qcom,supply-post-on-sleep = <3>;
+			qcom,supply-post-off-sleep = <12>;
+		};
+
+		qcom,panel-supply-entry@3 {
+			reg = <3>;
+			qcom,supply-name = "lcd-vsn";
+			qcom,supply-min-voltage = <5000000>;
+			qcom,supply-max-voltage = <5000000>;
+			qcom,supply-enable-load = <0>;
+			qcom,supply-disable-load = <0>;
+			qcom,supply-post-on-sleep = <12>;
+			qcom,supply-pre-off-sleep = <8>;
+			qcom,supply-post-off-sleep = <12>;
+		};
+	};
 };
 
 /* 16103 uses the regulator-powered AK4376 and MAX98927L amplifier. */
@@ -92,14 +172,12 @@
 	status = "okay";
 
 	lm3697@36 {
-		compatible = "ti,lm3697", "lm3697";
+		compatible = "ti,lm3697";
 		reg = <0x36>;
 		enable-gpios = <&pm660_gpios 13 0>;
-		/* 4.19 only has the LMU MFD parent here; its LM3697 backlight child
-		 * and the MDSS integration used by the stock kernel are missing. */
-		status = "disabled";
+		status = "okay";
 
-		backlight {
+		lm3697_backlight: backlight {
 			compatible = "ti,lm3697-backlight";
 		};
 	};
@@ -147,6 +225,9 @@
 };
 
 &dsi_oppo16103jdi_r63452_1080p_cmd {
+	qcom,panel-supply-entries = <&oppo_dsi_panel_pwr_supply_16103>;
+	qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_external";
+	backlight = <&lm3697_backlight>;
 	qcom,mdss-dsi-panel-timings-phy-v2 = [
 		24 1f 08 09 05 03 04 a0
 		24 1f 08 09 05 03 04 a0
