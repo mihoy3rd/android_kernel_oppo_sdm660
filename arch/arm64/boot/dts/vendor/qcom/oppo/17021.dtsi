@@ -34,6 +34,7 @@
 
 &int_codec {
 	/delete-property/ qcom,us-euro-gpios;
+	oppo,speaker-pa = "maxim";
 };
 
 &us_euro_gpio {
@@ -131,19 +132,17 @@
 		ak4376-avdd-supply = <&pm660_l14>;
 		ak4376-tvdd-L8-supply = <&pm660_l8>;
 		ak4376-avdd-L8-supply = <&pm660_l8>;
-		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
-		status = "disabled";
+		status = "okay";
 	};
 
 	max989xx@3a {
-		compatible = "maxim,max98927L", "maxim,max98927";
+		compatible = "maxim,max98927L";
 		reg = <0x3a>;
+		mono_stereo_mode = <0>;
 		interleave_mode = <0>;
-		vmon-slot-no = <0>;
-		imon-slot-no = <1>;
-		/* The 4.19 codec lacks OPPO reset/regulator and SDM660 machine-link
-		 * integration; leave it off until that driver work is completed. */
-		status = "disabled";
+		maxim,98927-reset-gpio = <&tlmm 80 0x00>;
+		max989xx_vdd-supply = <&pm660_l13>;
+		status = "okay";
 	};
 };
 

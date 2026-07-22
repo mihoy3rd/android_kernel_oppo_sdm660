@@ -23,6 +23,7 @@
 /* OPPO uses the SDM660 internal-codec machine path and an external MI2S amp. */
 &int_codec {
 	qcom,model = "sdm660-snd-card-mtp";
+	oppo,headphone-pa = "akm";
 	qcom,wsa-disable;
 	qcom,msm-mi2s-master = <0>, <1>, <0>, <0>, <0>;
 	qcom,msm-mi2s-ext-mclk = <1>, <0>, <0>, <0>, <0>;

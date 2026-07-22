@@ -25,6 +25,7 @@
 
 &int_codec {
 	/delete-property/ qcom,us-euro-gpios;
+	oppo,speaker-pa = "nxp";
 };
 
 &us_euro_gpio {
@@ -60,8 +61,7 @@
 		reg = <0x10>;
 		ak4376,reset-gpio = <&tlmm 76 0x00>;
 		audio-vdd-enable-gpio = <&tlmm 60 0x00>;
-		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
-		status = "disabled";
+		status = "okay";
 	};
 
 	tfa98xx@36 {
@@ -69,8 +69,7 @@
 		reg = <0x36>;
 		nxp,rst-ctrl-gpio = <&tlmm 80 0x00>;
 		tfa9890_vdd-supply = <&pm660_l13>;
-		/* tfa9879 is a different codec/DAI; do not bind it as tfa98xx. */
-		status = "disabled";
+		status = "okay";
 	};
 };
 

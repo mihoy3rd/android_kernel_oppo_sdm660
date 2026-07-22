@@ -24,6 +24,10 @@
 
 /* ===== 16103 特有硬件 overlay ===== */
 
+&int_codec {
+	oppo,speaker-pa = "maxim";
+};
+
 /* 16103 LCD has no POC GPIO state and uses the PMIC +/-5 V enables. */
 &mdss_dsi0 {
 	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
@@ -69,19 +73,17 @@
 		ak4376-avdd-supply = <&pm660_l14>;
 		ak4376-tvdd-L8-supply = <&pm660_l8>;
 		ak4376-avdd-L8-supply = <&pm660_l8>;
-		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
-		status = "disabled";
+		status = "okay";
 	};
 
 	max989xx@3a {
-		compatible = "maxim,max98927L", "maxim,max98927";
+		compatible = "maxim,max98927L";
 		reg = <0x3a>;
+		mono_stereo_mode = <0>;
 		interleave_mode = <0>;
-		vmon-slot-no = <0>;
-		imon-slot-no = <1>;
-		/* The upstream-style 4.19 codec does not implement the stock reset
-		 * and regulator contract, and the SDM660 machine link is absent. */
-		status = "disabled";
+		maxim,98927-reset-gpio = <&tlmm 80 0x00>;
+		max989xx_vdd-supply = <&pm660_l13>;
+		status = "okay";
 	};
 };
 
