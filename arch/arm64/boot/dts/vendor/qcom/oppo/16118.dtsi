@@ -21,6 +21,10 @@
 
 /* ===== 16118 特有硬件 overlay ===== */
 
+&int_codec {
+	oppo,speaker-pa = "maxim";
+};
+
 /* 16118 LCD uses EXITS/ERR only; GPIO63 POC belongs to the AMOLED boards. */
 &mdss_dsi0 {
 	pinctrl-0 = <&mdss_dsi_active &mdss_te_active
@@ -64,19 +68,17 @@
 		ak4376-avdd-supply = <&pm660_l14>;
 		ak4376-tvdd-L8-supply = <&pm660_l8>;
 		ak4376-avdd-L8-supply = <&pm660_l8>;
-		/* No akm,ak4376 codec or SDM660 machine-link consumer in 4.19. */
-		status = "disabled";
+		status = "okay";
 	};
 
 	max989xx@3a {
-		compatible = "maxim,max98927L", "maxim,max98927";
+		compatible = "maxim,max98927L";
 		reg = <0x3a>;
+		mono_stereo_mode = <0>;
 		interleave_mode = <0>;
-		vmon-slot-no = <0>;
-		imon-slot-no = <1>;
-		/* See 16103: the 4.19 codec lacks OPPO reset/regulator and machine
-		 * integration, so do not bind a partially described amplifier. */
-		status = "disabled";
+		maxim,98927-reset-gpio = <&tlmm 80 0x00>;
+		max989xx_vdd-supply = <&pm660_l13>;
+		status = "okay";
 	};
 };
 
