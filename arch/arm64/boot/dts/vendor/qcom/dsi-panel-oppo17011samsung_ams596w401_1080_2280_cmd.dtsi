@@ -18,6 +18,8 @@
 &mdss_mdp {
 		dsi_oppo17011samsung_ams596w401_1080_2280_cmd: qcom,mdss_dsi_oppo17011samsung_ams596w401_1080_2280_cmd {
 		qcom,mdss-dsi-panel-name = "oppo17011samsung ams596w401 1080 2280 cmd mode dsi panel";
+		qcom,mdss-dsi-panel-manufacture = "samsung1024";
+		qcom,mdss-dsi-panel-version = "SOFEG01_S-QC01";
 		qcom,mdss-dsi-panel-controller = <&mdss_dsi0>;
 		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
 		qcom,mdss-dsi-panel-destination = "display_1";
