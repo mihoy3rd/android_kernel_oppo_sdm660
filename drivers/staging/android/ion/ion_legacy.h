@@ -4,6 +4,7 @@
 #ifdef CONFIG_ION_LEGACY
 
 #include "../uapi/ion.h"
+#include "../uapi/msm_ion.h"
 
 typedef int ion_user_handle_t;
 
@@ -51,6 +52,32 @@ struct ion_handle_data {
 };
 
 /**
+ * struct ion_custom_data - metadata for a legacy heap-specific ioctl
+ * @cmd: architecture-specific command
+ * @arg: userspace pointer to command data
+ */
+struct ion_custom_data {
+	unsigned int cmd;
+	unsigned long arg;
+};
+
+/**
+ * struct ion_flush_data - legacy Qualcomm cache maintenance request
+ * @handle: imported ION handle
+ * @fd: dma-buf file descriptor
+ * @vaddr: userspace mapping (kept for ABI compatibility)
+ * @offset: first byte to synchronize
+ * @length: number of bytes to synchronize
+ */
+struct ion_flush_data {
+	ion_user_handle_t handle;
+	int fd;
+	void *vaddr;
+	unsigned int offset;
+	unsigned int length;
+};
+
+/**
  * DOC: ION_OLD_IOC_ALLOC - allocate memory (pre-4.12 version)
  *
  * Takes an ion_old_allocation_data struct and returns it with the handle field
@@ -95,6 +122,28 @@ struct ion_handle_data {
  * filed set to the corresponding opaque handle.
  */
 #define ION_IOC_IMPORT		_IOWR(ION_IOC_MAGIC, 5, struct ion_fd_data)
+
+/**
+ * DOC: ION_IOC_CUSTOM - issue an implementation-specific legacy ION command
+ */
+#define ION_IOC_CUSTOM		_IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
+
+/**
+ * DOC: ION_IOC_SYNC - synchronize a shared dma-buf for device access
+ */
+#define ION_IOC_SYNC		_IOWR(ION_IOC_MAGIC, 7, struct ion_fd_data)
+
+#define ION_IOC_CLEAN_CACHES	_IOWR(ION_IOC_MSM_MAGIC, 0, \
+					      struct ion_flush_data)
+#define ION_IOC_INV_CACHES	_IOWR(ION_IOC_MSM_MAGIC, 1, \
+					      struct ion_flush_data)
+#define ION_IOC_CLEAN_INV_CACHES _IOWR(ION_IOC_MSM_MAGIC, 2, \
+					       struct ion_flush_data)
+
+int ion_legacy_cache_ioctl(ion_user_handle_t handle, int fd,
+			   unsigned int offset, unsigned int length,
+			   unsigned int cmd);
+int ion_legacy_sync_ioctl(int fd);
 
 #endif /* CONFIG_ION_LEGACY */
 
