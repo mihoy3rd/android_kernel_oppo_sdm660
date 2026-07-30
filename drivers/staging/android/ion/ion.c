@@ -11,11 +11,13 @@
 #include <linux/debugfs.h>
 #include <linux/device.h>
 #include <linux/dma-buf.h>
+#include <linux/dma-mapping.h>
 #include <linux/err.h>
 #include <linux/export.h>
 #include <linux/file.h>
 #include <linux/freezer.h>
 #include <linux/fs.h>
+#include <linux/highmem.h>
 #include <linux/idr.h>
 #include <linux/kthread.h>
 #include <linux/list.h>
@@ -31,6 +33,7 @@
 #include <linux/vmalloc.h>
 #include <linux/bitops.h>
 #include <linux/msm_dma_iommu_mapping.h>
+#include <asm/cacheflush.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/ion.h>
 #include <soc/qcom/secure_buffer.h>
@@ -38,6 +41,9 @@
 #include "ion.h"
 #include "ion_secure_util.h"
 #include "compat_ion.h"
+#ifdef CONFIG_ION_LEGACY
+#include "ion_legacy.h"
+#endif
 
 static struct ion_device *internal_dev;
 static atomic_long_t total_heap_bytes;
@@ -1033,6 +1039,165 @@ static const struct dma_buf_ops dma_buf_ops = {
 	.vunmap = ion_dma_buf_vunmap,
 	.get_flags = ion_dma_buf_get_flags,
 };
+
+#ifdef CONFIG_ION_LEGACY
+static void ion_legacy_clean_range(const void *start, const void *end)
+{
+	dmac_clean_range(start, end);
+}
+
+static void ion_legacy_inv_range(const void *start, const void *end)
+{
+	dmac_inv_range(start, end);
+}
+
+static void ion_legacy_flush_range(const void *start, const void *end)
+{
+	dmac_flush_range(start, end);
+}
+
+static void ion_legacy_cache_pages(struct page *page, size_t offset,
+				   size_t length,
+				   void (*op)(const void *, const void *))
+{
+	size_t left = length;
+	unsigned long pfn;
+	void *vaddr;
+
+	pfn = page_to_pfn(page) + offset / PAGE_SIZE;
+	page = pfn_to_page(pfn);
+	offset &= ~PAGE_MASK;
+
+	if (!PageHighMem(page)) {
+		vaddr = (char *)page_address(page) + offset;
+		op(vaddr, (char *)vaddr + length);
+		return;
+	}
+
+	while (left) {
+		size_t len = min_t(size_t, left, PAGE_SIZE - offset);
+
+		page = pfn_to_page(pfn);
+		vaddr = kmap_atomic(page);
+		op((char *)vaddr + offset, (char *)vaddr + offset + len);
+		kunmap_atomic(vaddr);
+
+		offset = 0;
+		pfn++;
+		left -= len;
+	}
+}
+
+int ion_legacy_buffer_cache_op(struct dma_buf *dmabuf, size_t offset,
+			       size_t length, unsigned int cmd)
+{
+	struct ion_buffer *buffer;
+	struct sg_table *table;
+	struct scatterlist *sg;
+	void (*op)(const void *, const void *);
+	size_t pos = 0;
+	size_t start = offset;
+	size_t left = length;
+	int i;
+	int ret = 0;
+
+	if (!dmabuf || dmabuf->ops != &dma_buf_ops)
+		return -EINVAL;
+
+	if (offset > dmabuf->size || length > dmabuf->size - offset)
+		return -EINVAL;
+
+	if (!length)
+		return 0;
+
+	switch (cmd) {
+	case ION_IOC_CLEAN_CACHES:
+		op = ion_legacy_clean_range;
+		break;
+	case ION_IOC_INV_CACHES:
+		op = ion_legacy_inv_range;
+		break;
+	case ION_IOC_CLEAN_INV_CACHES:
+		op = ion_legacy_flush_range;
+		break;
+	default:
+		return -ENOTTY;
+	}
+
+	buffer = dmabuf->priv;
+	mutex_lock(&buffer->lock);
+
+	if (!(buffer->flags & ION_FLAG_CACHED) ||
+	    !hlos_accessible_buffer(buffer))
+		goto out_unlock;
+
+	table = buffer->sg_table;
+	if (IS_ERR_OR_NULL(table)) {
+		ret = table ? PTR_ERR(table) : -EINVAL;
+		goto out_unlock;
+	}
+
+	for_each_sg(table->sgl, sg, table->nents, i) {
+		size_t sg_offset;
+		size_t size;
+
+		if (start >= pos + sg->length) {
+			pos += sg->length;
+			continue;
+		}
+
+		if (WARN_ON_ONCE(!sg_page(sg))) {
+			/*
+			 * All heaps build their sg_table from struct pages
+			 * (carveout/chunk use pfn_to_page, cma and system
+			 * heaps allocate pages directly), so a page-less
+			 * entry is a kernel invariant violation rather than
+			 * a buffer type that needs a separate path.
+			 */
+			ret = -EINVAL;
+			break;
+		}
+
+		sg_offset = start > pos ? start - pos : 0;
+		size = min_t(size_t, left, sg->length - sg_offset);
+		ion_legacy_cache_pages(sg_page(sg), sg->offset + sg_offset,
+				       size, op);
+
+		start += size;
+		left -= size;
+		pos += sg->length;
+		if (!left)
+			break;
+	}
+
+	if (left)
+		ret = -EINVAL;
+
+out_unlock:
+	mutex_unlock(&buffer->lock);
+	return ret;
+}
+
+int ion_legacy_buffer_sync(struct dma_buf *dmabuf)
+{
+	struct ion_buffer *buffer;
+
+	if (!dmabuf || dmabuf->ops != &dma_buf_ops)
+		return -EINVAL;
+
+	buffer = dmabuf->priv;
+	if (!hlos_accessible_buffer(buffer))
+		return -EINVAL;
+
+	/*
+	 * Matches ion_sync_for_device() from the last pre-4.12 Ion ABI:
+	 * sync the whole allocation for device access via the DMA API.
+	 */
+	dma_sync_sg_for_device(NULL, buffer->sg_table->sgl,
+			       buffer->sg_table->nents, DMA_BIDIRECTIONAL);
+	return 0;
+}
+#endif
 
 struct dma_buf *ion_alloc_dmabuf(size_t len, unsigned int heap_id_mask,
 				 unsigned int flags)
