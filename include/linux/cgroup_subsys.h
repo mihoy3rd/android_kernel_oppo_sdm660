@@ -21,9 +21,7 @@ SUBSYS(cpu)
 SUBSYS(cpuacct)
 #endif
 
-#if IS_ENABLED(CONFIG_SCHED_TUNE)
 SUBSYS(schedtune)
-#endif
 
 #if IS_ENABLED(CONFIG_SCHED_TUNE_DUMMY)
 SUBSYS(schedtune)
