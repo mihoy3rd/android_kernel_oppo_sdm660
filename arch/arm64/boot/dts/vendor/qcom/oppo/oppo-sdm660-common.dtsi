@@ -709,9 +709,8 @@
 /* --- i2c_1 (触摸屏总线): 禁用 DMA (启动关键) ---
  * 4.19 i2c-msm-v2 驱动对触摸屏 video_mode 内存做 DMA 映射会 panic (Xiaomi longcheer
  * 同款 SDM660 已验证: LineageOS/android_kernel_xiaomi_sdm660 commit 2c6ce41)。
- * 5 设备触摸屏均在 i2c_1, 共性禁用。当前 4.19 内核尚未编入 OPPO synaptics-s3508
- * 驱动 (synaptics_dsx 的 compatible "synaptics,dsx-i2c" 不匹配 s3508), 暂不触发;
- * 一旦移植 S3508 触摸驱动则必需此属性, 否则触摸 probe 时 kernel panic -> 卡 OEM Logo。
+ * 5 设备触摸屏均在 i2c_1，由 OPPO touchpanel 框架 (synaptics-s3508/synaptics-s3320)
+ * probe，必须在此共性禁用 DMA，否则触摸 probe 时 kernel panic -> 卡 OEM Logo。
  * 驱动: drivers/i2c/busses/i2c-msm-v2.c, "qcom,disable-dma" -> BLOCK 传输模式。 */
 &i2c_1 {
 	qcom,disable-dma;
