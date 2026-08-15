@@ -11,7 +11,8 @@
  *   (qcom 4.19 base) -> oppo/16103.dtsi (设备特有 + oppo/oppo-sdm660-common.dtsi 共性)。
  *
  * 板级硬件及 OPPO camera_v2 sensor/eeprom/flash 拓扑见 oppo/16103.dtsi；
- * 触摸、指纹、VOOC 和外置音频等缺失的内核驱动不属于 DTS 入口职责。
+ * 触摸由 oppo_touchscreen 框架 (synaptics-s3508/synaptics-s3320) 提供；
+ * 指纹、VOOC 和外置音频等其余内核驱动不属于 DTS 入口职责。
  *
  * 验证范围: cpp+dtc 编译及静态 DTB 对比；msm-id/board-id/pmic-id 对齐
  *   stock 最终 DTB，reserved-memory TZ=83M 对齐 stock。不以此声称已完成该型号实机验证。
