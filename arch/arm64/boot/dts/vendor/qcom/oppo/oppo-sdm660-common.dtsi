@@ -712,11 +712,6 @@
 	};
 	fpc_fpc1020 {
 		compatible = "fpc,fpc1020";
-		/* The 4.19 driver attached to this compatible requires a reset GPIO
-		 * and three named states.  GPIO40 is the stock power-enable line, not
-		 * a reset signal; keep the hardware description but prevent a probe
-		 * with the incompatible 4.4 binding. */
-		status = "disabled";
 		fpc,irq-gpio = <&tlmm 72 0x00>;
 		fpc,vdd_en = <&tlmm 40 0x00>;
 		vdd_io-supply = <&pm660_l13>;
