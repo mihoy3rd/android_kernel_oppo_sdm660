@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-only
+config OPPO_FINGERPRINT
+	bool "OPPO fingerprint driver"
+	depends on GPIOLIB && INPUT
+	help
+	  Say Y here to enable OPPO fingerprint support for SDM660 devices.
+
+	  This builds the common fingerprint ID detection (oppo,fp_common),
+	  the FPC1020 TEE platform driver, and on R11s devices the Goodix
+	  fingerprint platform driver.
