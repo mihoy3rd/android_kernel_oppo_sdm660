@@ -149,6 +149,38 @@
 	};
 };
 
+&i2c_2 {
+		pinctrl-names = "i2c_active", "i2c_sleep", "i2c_bitbang", "i2c_pulldown";
+		pinctrl-3 = <&i2c_2_pulldown>;
+
+	stm8s_fastcg@26{
+		qcom,vooc-fw-type = <4>;
+        qcom,vooc-low-temp = <120>;
+};
+
+			i2c_2_pulldown: i2c_2_pulldown {
+				mux {
+					pins = "gpio6", "gpio7";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio6", "gpio7";
+					drive-strength = <2>;
+					bias-pull-down;
+					output-low;
+				};
+			};
+};
+
+&pm660_charger {
+			qcom,batt_capacity_mah = <3150>;
+			qcom,iterm-ma = <165>;
+			qcom,usbid-gpio = <&tlmm 49 0x00>;
+			pinctrl-3 = <&usbid_active>;
+			pinctrl-4 = <&usbid_sleep>;					
+};
+
 /* 主屏：保持 oppo-sdm660-common.dtsi 的 rm67195（= stock R11s 实际 prim-pan，
  * 所有 oppo 4.4 入口 dsi-pref-prim-pan 均指向 dsi_rm67195）。
  * oppo sofeg01/ams596w401 由本型号显式引入，其余共享面板由 common 引入（与

@@ -237,6 +237,7 @@ struct fg_gen3_chip {
 	bool			esr_fcc_ctrl_en;
 	bool			esr_flt_cold_temp_en;
 	bool			slope_limit_en;
+
 };
 
 static struct fg_sram_param pmi8998_v1_sram_params[] = {
@@ -817,8 +818,6 @@ static int fg_get_batt_profile(struct fg_dev *fg)
 		return -ENXIO;
 	}
 
-	profile_node = of_batterydata_get_best_profile(batt_node,
-				fg->batt_id_ohms / 1000, NULL);
 	if (IS_ERR(profile_node))
 		return PTR_ERR(profile_node);
 

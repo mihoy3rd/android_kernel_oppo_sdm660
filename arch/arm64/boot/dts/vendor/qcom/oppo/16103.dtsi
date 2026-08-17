@@ -299,4 +299,9 @@
 	};
 };
 
+&pm660_charger {
+			qcom,batt_capacity_mah = <2900>;
+			qcom,iterm-ma = <150>;
+};
+
 #include "oppo-camera-161xx.dtsi"

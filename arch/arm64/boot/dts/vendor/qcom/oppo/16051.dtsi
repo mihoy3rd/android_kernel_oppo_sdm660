@@ -158,4 +158,16 @@
 	};
 };
 
+&i2c_2 {
+	stm8s_fastcg@26{
+		qcom,vooc-fw-type = <5>;
+        qcom,vooc-low-temp = <120>;
+};
+};
+
+&pm660_charger {
+			qcom,batt_capacity_mah = <2900>;
+			qcom,iterm-ma = <150>;
+};
+
 #include "oppo-camera-16051.dtsi"
