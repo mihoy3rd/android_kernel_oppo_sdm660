@@ -229,4 +229,36 @@
 				    0x00 0x18>;
 };
 
+&i2c_2 {
+		pinctrl-names = "i2c_active", "i2c_sleep", "i2c_bitbang", "i2c_pulldown";
+		pinctrl-3 = <&i2c_2_pulldown>;
+
+	stm8s_fastcg@26{
+        qcom,vooc-low-temp = <120>;
+		qcom,vooc-fw-type = <4>;
+};
+
+			i2c_2_pulldown: i2c_2_pulldown {
+				mux {
+					pins = "gpio6", "gpio7";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio6", "gpio7";
+					drive-strength = <2>;
+					bias-pull-down;
+					output-low;
+				};
+			};
+};
+
+&pm660_charger {
+			qcom,batt_capacity_mah = <3880>;
+            qcom,iterm-ma = <200>;
+			qcom,usbid-gpio = <&tlmm 49 0x00>;
+			pinctrl-3 = <&usbid_active>;
+			pinctrl-4 = <&usbid_sleep>;					
+};
+
 #include "oppo-camera-17021.dtsi"
