@@ -21,6 +21,10 @@
 #include "oppo-sdm660-platform.dtsi"
 
 /* OPPO uses the SDM660 internal-codec machine path and an external MI2S amp. */
+&pmic_analog_codec {
+	qcom,cdc-micbias-cfilt-mv = <2700000>;
+};
+
 &int_codec {
 	qcom,model = "sdm660-snd-card-mtp";
 	oppo,headphone-pa = "akm";

@@ -1203,7 +1203,7 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 		return NULL;
 
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm_int_wcd_cal)->X) = (Y))
-	S(v_hs_max, 1500);
+	S(v_hs_max, 1700);
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(msm_int_wcd_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -1226,16 +1226,16 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
-	btn_low[0] = 75;
-	btn_high[0] = 75;
-	btn_low[1] = 150;
-	btn_high[1] = 150;
-	btn_low[2] = 225;
-	btn_high[2] = 225;
-	btn_low[3] = 450;
-	btn_high[3] = 450;
-	btn_low[4] = 500;
-	btn_high[4] = 500;
+	btn_low[0] = 60;		/* Hook ,0 ~ 160 Ohm*/
+	btn_high[0] = 130;
+	btn_low[1] = 131;
+	btn_high[1] = 131;
+	btn_low[2] = 253;		/* Volume + ,160 ~ 360 Ohm*/
+	btn_high[2] = 253;
+	btn_low[3] = 425;		/* Volume - ,360 ~ 680 Ohm*/
+	btn_high[3] = 425;
+	btn_low[4] = 426;
+	btn_high[4] = 426;
 
 	return msm_int_wcd_cal;
 }
