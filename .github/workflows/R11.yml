@@ -1,0 +1,108 @@
+name: 編譯 OPPO R11/s の 核心與 Anykernel3 文檔
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      device:
+        type: choice
+        description: '請選擇裝置名稱'        
+        required: true
+        options:
+        - 'R11'
+        - 'R11s'
+
+jobs:
+  build:
+    name: ${{ github.actor }}編譯嘅${{ github.event.inputs.device }}核心
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: 獲取分支嘅名稱
+        id: branch-names
+        uses: tj-actions/branch-names@v8
+
+      - name: 設定5GIB嘅SWAP
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 5
+
+      - name: 安裝所需嘅環境
+        run: |
+          sudo apt-get update
+          sudo apt-get install git automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
+          mkdir -p $GITHUB_WORKSPACE/workdir
+          cd $GITHUB_WORKSPACE/workdir
+          echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
+
+      - name: 獲取 GCC 工具鏈
+        run: |
+          git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 -b lineage-19.1 --depth=1 $GITHUB_WORKSPACE/workdir/gcc
+
+      - name: 獲取 Clang-r450784d 工具鏈
+        run: |
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android13-release/clang-r450784d.tar.gz -O $GITHUB_WORKSPACE/workdir/clang.tar.gz
+          mkdir $GITHUB_WORKSPACE/workdir/clang
+          tar zxvf $GITHUB_WORKSPACE/workdir/clang.tar.gz -C $GITHUB_WORKSPACE/workdir/clang
+  
+      - name: 獲取 ${{ github.event.inputs.device }} 嘅核心源碼
+        run: |
+          git clone --recursive https://github.com/$GITHUB_REPOSITORY/ -b ${{ steps.branch-names.outputs.current_branch }} --depth 1 $GITHUB_WORKSPACE/workdir/source
+
+      - name: 設定 Ccache 嘅容量
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+         key: build-elysia-kernel
+         max-size: 4G
+
+      - name: 編譯 ${{ github.event.inputs.device }} 核心
+        run: |
+          export KBUILD_BUILD_HOST=Github-Action
+          export KBUILD_BUILD_USER=$(echo ${{ github.actor }})
+          export ARCH="arm64"
+          export SUBARCH="arm64"
+          export PATH="$GITHUB_WORKSPACE/workdir/clang/bin:$GITHUB_WORKSPACE/workdir/gcc/bin:$PATH"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/workdir/clang/lib64:$LD_LIBRARY_PATH"
+          export CROSS_COMPILE="aarch64-linux-android-"
+          cd $GITHUB_WORKSPACE/workdir/source
+          mkdir -p out
+          ./scripts/kconfig/merge_config.sh -m -O out \
+          arch/arm64/configs/vendor/sdm660-perf_defconfig \
+          arch/arm64/configs/vendor/oppo/sdm660-common.config \
+          arch/arm64/configs/vendor/oppo/${{ github.event.inputs.device }}.config
+          make O=out olddefconfig CC="ccache clang"
+          make -j$(nproc --all) O=out \
+          CC="ccache clang" \
+          CLANG_TRIPLE=aarch64-linux-gnu- \
+          CROSS_COMPILE=aarch64-linux-android- \
+          LLVM=1 LLVM_IAS=1 \
+          Image.gz-dtb 2>&1 | tee kernel.log
+
+      - name: 上傳編譯日志
+        uses: actions/upload-artifact@v4
+        with:
+          name: android_kernel_oppo_sdm660_${{ github.event.inputs.target }}_${{ env.BUILD_TIME }}_kernel.log
+          path: workdir/source/kernel.log
+
+      - name: 檢查 ${{ github.event.inputs.device }} 嘅內核文檔
+        run: |
+          cd $GITHUB_WORKSPACE/workdir/source
+          if [ -f out/arch/arm64/boot/Image.gz-dtb ]; then
+              echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
+          else
+              echo "Kernel output file is empty"
+              exit 1
+          fi
+
+      - name: 制作 ${{ github.event.inputs.device }} 嘅 Anykernel3 文檔
+        if: env.CHECK_FILE_IS_OK == 'true'
+        run: |
+          git clone https://github.com/MissElysia/android_kernel_oppo_sdm660 -b prebuilt_ak3 --depth 1 $GITHUB_WORKSPACE/workdir/ak3
+          rm -r $GITHUB_WORKSPACE/workdir/ak3/.git
+          cp $GITHUB_WORKSPACE/workdir/source/out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/workdir/ak3
+
+      - name: 上傳 ${{ github.event.inputs.device }} 嘅 AnyKernel3 文檔
+        if: env.CHECK_FILE_IS_OK == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnyKernel3_oppo_sdm660_${{ github.event.inputs.target }}_${{ env.BUILD_TIME }}
+          path: workdir/ak3/*
