@@ -68,6 +68,8 @@ jobs:
           ./scripts/kconfig/merge_config.sh -m -O out \
           arch/arm64/configs/vendor/sdm660-perf_defconfig \
           arch/arm64/configs/vendor/oppo/sdm660-common.config \
+          arch/arm64/configs/vendor/oppo/droidspaces.config \
+          arch/arm64/configs/vendor/oppo/droidspaces-additional.config \
           arch/arm64/configs/vendor/oppo/${{ github.event.inputs.device }}.config
           make O=out olddefconfig CC="ccache clang"
           make -j$(nproc --all) O=out \
