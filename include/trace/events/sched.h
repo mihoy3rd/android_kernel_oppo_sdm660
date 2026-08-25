@@ -862,7 +862,7 @@ TRACE_EVENT(sched_load_avg_cpu,
 	),
 
 	TP_printk("cpu=%d load_avg=%lu util_avg=%lu util_avg_pelt=%lu",
-		__entry->cpu, __entry->load_avg, __entry->util_avg);
+		__entry->cpu, __entry->load_avg, __entry->util_avg)
 );
 
 
