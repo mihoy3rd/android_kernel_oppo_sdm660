@@ -5789,7 +5789,7 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
 		/* Handle any unfinished DELAY_DEQUEUE business first. */
 		if (se->sched_delayed) {
 			int flags = DEQUEUE_SLEEP | DEQUEUE_DELAYED;
-		    struct cfs_rq *qcfs_rq = cfs_rq_of(se);
+			struct cfs_rq *qcfs_rq = cfs_rq_of(se);
 
 			dequeue_entity(qcfs_rq, se, flags);
 		} else if (se->on_rq)
@@ -5806,7 +5806,6 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
 		/* end evaluation on encountering a throttled cfs_rq */
 		if (cfs_rq_throttled(cfs_rq))
 			goto unthrottle_throttle;
-	}
 
 	for_each_sched_entity(se) {
 		cfs_rq = cfs_rq_of(se);
