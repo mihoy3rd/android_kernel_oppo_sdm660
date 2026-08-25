@@ -5931,6 +5931,7 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
 		/* Handle any unfinished DELAY_DEQUEUE business first. */
 		if (se->sched_delayed) {
 			int flags = DEQUEUE_SLEEP | DEQUEUE_DELAYED;
+		    struct cfs_rq *qcfs_rq = cfs_rq_of(se);
 
 			dequeue_entity(qcfs_rq, se, flags);
 		} else if (se->on_rq)
