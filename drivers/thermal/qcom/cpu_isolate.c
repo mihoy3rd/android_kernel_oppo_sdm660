@@ -71,9 +71,6 @@ static int cpu_isolate_pm_notify(struct notifier_block *nb,
 					!cpumask_test_and_set_cpu(cpu,
 					&cpus_isolated_by_thermal)) {
 					mutex_unlock(&cpu_isolate_lock);
-					if (sched_isolate_cpu(cpu))
-						cpumask_clear_cpu(cpu,
-						&cpus_isolated_by_thermal);
 					mutex_lock(&cpu_isolate_lock);
 				}
 				continue;
@@ -106,8 +103,7 @@ static int cpu_isolate_hp_offline(unsigned int offline_cpu)
 
 		if ((cpu_isolate_cdev->cpu_isolate_state)
 			&& (cpumask_test_and_clear_cpu(offline_cpu,
-			&cpus_isolated_by_thermal)))
-			sched_unisolate_cpu_unlocked(offline_cpu);
+			&cpus_isolated_by_thermal)));
 		break;
 	}
 	mutex_unlock(&cpu_isolate_lock);
@@ -185,9 +181,6 @@ static int cpu_isolate_set_cur_state(struct thermal_cooling_device *cdev,
 			(!cpumask_test_and_set_cpu(cpu,
 			&cpus_isolated_by_thermal))) {
 			mutex_unlock(&cpu_isolate_lock);
-			if (sched_isolate_cpu(cpu))
-				cpumask_clear_cpu(cpu,
-					&cpus_isolated_by_thermal);
 			mutex_lock(&cpu_isolate_lock);
 		}
 		cpumask_set_cpu(cpu, &cpus_in_max_cooling_level);
