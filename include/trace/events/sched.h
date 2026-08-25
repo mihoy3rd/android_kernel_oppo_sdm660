@@ -852,7 +852,6 @@ TRACE_EVENT(sched_load_avg_cpu,
 		__field(unsigned long,	load_avg)
 		__field(unsigned long,	util_avg)
 		__field(unsigned long,	util_avg_pelt)
-		__field(u32,		util_avg_walt)
 	),
 
 	TP_fast_assign(
@@ -860,12 +859,10 @@ TRACE_EVENT(sched_load_avg_cpu,
 		__entry->load_avg               = cfs_rq->avg.load_avg;
 		__entry->util_avg               = cfs_rq->avg.util_avg;
 		__entry->util_avg_pelt  = cfs_rq->avg.util_avg;
-		__entry->util_avg_walt  = 0;
 	),
 
-	TP_printk("cpu=%d load_avg=%lu util_avg=%lu util_avg_pelt=%lu util_avg_walt=%u",
+	TP_printk("cpu=%d load_avg=%lu util_avg=%lu util_avg_pelt=%lu",
 		__entry->cpu, __entry->load_avg, __entry->util_avg,
-		__entry->util_avg_pelt, __entry->util_avg_walt)
 );
 
 
@@ -962,11 +959,9 @@ TRACE_EVENT(sched_util_est_task,
 		__entry->pid			= tsk->pid;
 		__entry->cpu			= task_cpu(tsk);
 		__entry->util_avg		= avg->util_avg;
-		__entry->est_enqueued		= avg->util_est.enqueued;
-		__entry->est_ewma		= avg->util_est.ewma;
 	),
 
-	TP_printk("comm=%s pid=%d cpu=%d util_avg=%u util_est_ewma=%u util_est_enqueued=%u",
+	TP_printk("comm=%s pid=%d cpu=%d util_avg=%u",
 		  __entry->comm,
 		  __entry->pid,
 		  __entry->cpu,
@@ -987,19 +982,16 @@ TRACE_EVENT(sched_util_est_cpu,
 	TP_STRUCT__entry(
 		__field(int,		cpu)
 		__field(unsigned int,	util_avg)
-		__field(unsigned int,	util_est_enqueued)
 	),
 
 	TP_fast_assign(
 		__entry->cpu			= cpu;
 		__entry->util_avg		= cfs_rq->avg.util_avg;
-		__entry->util_est_enqueued	= cfs_rq->avg.util_est.enqueued;
 	),
 
-	TP_printk("cpu=%d util_avg=%u util_est_enqueued=%u",
+	TP_printk("cpu=%d util_avg=%u",
 		  __entry->cpu,
-		  __entry->util_avg,
-		  __entry->util_est_enqueued)
+		  __entry->util_avg)
 );
 
 TRACE_EVENT(sched_cpu_util,
@@ -1033,11 +1025,8 @@ TRACE_EVENT(sched_cpu_util,
 		__entry->capacity_curr      = capacity_curr_of(cpu);
 		__entry->capacity           = capacity_of(cpu);
 		__entry->capacity_orig      = capacity_orig_of(cpu);
-		__entry->irqload            = sched_irqload(cpu);
 		__entry->online             = cpu_online(cpu);
 		__entry->reserved           = is_reserved(cpu);
-		__entry->high_irq_load      = sched_cpu_high_irqload(cpu);
-		__entry->nr_rtg_high_prio_tasks = walt_nr_rtg_high_prio(cpu);
 	),
 
 	TP_printk("cpu=%d nr_running=%d cpu_util=%ld cpu_util_cum=%ld capacity_curr=%u capacity=%u capacity_orig=%u idle_state=%d irqload=%llu online=%u, isolated=%u, reserved=%u, high_irq_load=%u nr_rtg_hp=%u",
@@ -1267,7 +1256,6 @@ TRACE_EVENT(core_ctl_set_busy,
 		__entry->busy = busy;
 		__entry->old_is_busy = old_is_busy;
 		__entry->is_busy = is_busy;
-		__entry->high_irqload = sched_cpu_high_irqload(cpu);
 	),
 	TP_printk("cpu=%u, busy=%u, old_is_busy=%u, new_is_busy=%u high_irqload=%d",
 		__entry->cpu, __entry->busy, __entry->old_is_busy,
